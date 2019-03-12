@@ -24,7 +24,7 @@ class Widget(QMainWindow):
         self.show()
 
     def add_widget(self, visualiser):
-        new_widget = CentralWidget(visualiser)
+        new_widget = GraphWidget(visualiser)
         self.widget.addWidget(new_widget)
         self.widget.setCurrentWidget(new_widget)
 
@@ -37,7 +37,7 @@ class Widget(QMainWindow):
         self.widget.setCurrentIndex(current_index)
 
 
-class CentralWidget(QWidget):
+class GraphWidget(QWidget):
     radius = 50
     depth = 4
     def __init__(self, visualiser):
