@@ -1,16 +1,18 @@
-from models.common import Drawable, Colorable
+from models.common import Colorable
 from models.colors import get_color
 
 
-class Vertex(Colorable, Drawable):
-    DELTA = 80
+class Vertex(Colorable):
+    INDENT = 50
+    DELTA = 100
 
     def __init__(self, label, index, coordinates):
         super(Vertex, self).__init__()
 
         self.label = label
         self.index = index
-        self.area_color = get_color()
+        self.area_color = get_color('white')
+        self.color = get_color()
         self.coordinates = coordinates
 
         self._depth = None
@@ -25,11 +27,8 @@ class Vertex(Colorable, Drawable):
     def set_coordinates(self, coordinates):
         self.coordinates = coordinates
 
-    def draw(self, widget):
-        pass
 
-
-class Edge(Colorable, Drawable):
+class Edge(Colorable):
     def __init__(self, first_vertex, second_vertex, is_directed=False, max_flow=None, weight=None):
         super(Edge, self).__init__()
 
@@ -45,11 +44,8 @@ class Edge(Colorable, Drawable):
             raise ValueError('Incorrect flow')
         self.current_flow = flow
 
-    def draw(self, widget):
-        pass
 
-
-class Graph(Drawable):
+class Graph():
     DEFAULT_WIDTH = 800
     DEFAULT_HEIGHT = 600
 
@@ -80,6 +76,7 @@ class Graph(Drawable):
         self.__validate(ribs, vertices, flows, coordinates)
         self.vertices = []
         self.ribs = []
+        self.directed = directed
 
         for i in range(len(ribs)):
             label = vertices[i] if vertices else i
@@ -94,7 +91,8 @@ class Graph(Drawable):
                     else:
                         max_flow = None
                     weight = ribs[i][j] if directed else None
-                    self.ribs.append(Edge(self.vertices[i], self.vertices[j], directed, max_flow, weight))
+                    if directed or (not directed and not self.find_rib(i, j)):
+                        self.ribs.append(Edge(self.vertices[i], self.vertices[j], directed, max_flow, weight))
         if not coordinates:
             self.fetch_coordinates()
 
@@ -103,11 +101,27 @@ class Graph(Drawable):
             if vertex.index == index:
                 return vertex
 
+    def set_vertex_border_color(self, index, color):
+        vertex = self.find_vertex(index)
+        try:
+            vertex.set_border_color(color)
+        except Exception:
+            pass
+
+    def set_vertex_area_color(self, index, color):
+        vertex = self.find_vertex(index)
+        try:
+            vertex.set_area_color(color)
+        except Exception:
+            pass
+
     def find_rib(self, vertex_in_index, vertex_out_index):
         vertex_in = self.find_vertex(vertex_in_index)
         vertex_out = self.find_vertex(vertex_out_index)
         for rib in self.ribs:
             if rib.first_vertex == vertex_in and rib.second_vertex == vertex_out:
+                return rib
+            elif not self.directed and rib.second_vertex == vertex_in and rib.first_vertex == vertex_out:
                 return rib
 
     def delete_vertex(self, index):
@@ -124,6 +138,10 @@ class Graph(Drawable):
     def set_flow(self, vertex_in_index, vertex_out_index, flow):
         edge = self.find_rib(vertex_in_index, vertex_out_index)
         edge.set_current_flow(flow)
+
+    def set_edge_color(self, vertex_in, vertex_out, color):
+        edge = self.find_rib(vertex_in, vertex_out)
+        edge.set_color(color)
 
     def fetch_coordinates(self):
         pass
@@ -210,7 +228,7 @@ class Tree(Graph):
             count = r - l
             num = 1
             while l < r:
-                self.vertices[l].coordinates = [self.DEFAULT_WIDTH * num / (count + 1), (depth + 1) * Vertex.DELTA]
+                self.vertices[l].coordinates = [self.DEFAULT_WIDTH * num / (count + 1), Vertex.INDENT + depth * Vertex.DELTA]
                 l += 1
                 num += 1
             depth += 1

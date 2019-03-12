@@ -3,6 +3,9 @@ from PyQt5.QtWidgets import QApplication
 from models.graph_models import get_model as graph_get_model
 from models.ui import Widget
 
+app = QApplication([])
+user_interface = Widget()
+
 
 class Variables(object):
     TYPES = ['integer', 'float', 'list', 'dict', 'matrix', 'boolean']
@@ -41,21 +44,18 @@ class Description(object):
 
 
 class Visualizer(object):
-    def init_ui(self):
-        self.app = QApplication([])
-        self.user_interface = Widget()
+    def start_program(self):
+        app.exec_()
 
     def __init__(self, has_variables=False, variables=None, has_description=False, **kwargs):
         self.variables = Variables(variables) if has_variables else None
         self.description = Description() if has_description else None
-        self.init_ui()
 
     def set_description(self, text):
         self.description.set_text(text)
 
     def set_variable(self, key, value):
         self.variables.set_variable(key, value)
-
 
 class GraphVisualiser(Visualizer):
     def __init__(self, **kwargs):
@@ -66,4 +66,13 @@ class GraphVisualiser(Visualizer):
         self.model = graph_get_model(**kwargs)
 
     def next_step(self):
-        self.user_interface.add_widget(self)
+        user_interface.add_widget(self)
+
+    def set_vertex_border_color(self, index, color):
+        self.model.set_vertex_border_color(index, color)
+
+    def set_vertex_area_color(self, index, color):
+        self.model.set_vertex_area_color(index, color)
+
+    def set_edge_color(self, vertex_in, vertex_out, color):
+        self.model.set_edge_color(vertex_in, vertex_out, color)

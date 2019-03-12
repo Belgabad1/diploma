@@ -1,3 +1,5 @@
+from PyQt5.QtWidgets import QApplication
+
 from visualizers.models import GraphVisualiser
 
 
@@ -30,7 +32,11 @@ def init_graph():
     for i in range(1, 14):
         assert visualiser.model.vertices[i]._depth >= visualiser.model.vertices[i - 1]._depth
     visualiser.next_step()
-    visualiser.app.exec_()
+    visualiser.set_vertex_area_color(5, 'red')
+    visualiser.set_vertex_border_color(11, 'yellow')
+    visualiser.set_edge_color(5, 7, 'blue')
+    visualiser.next_step()
+    visualiser.start_program()
 
 if __name__ == '__main__':
     init_graph()
