@@ -1,4 +1,7 @@
+from PyQt5.QtWidgets import QApplication
+
 from models.graph_models import get_model as graph_get_model
+from models.ui import Widget
 
 
 class Variables(object):
@@ -38,9 +41,14 @@ class Description(object):
 
 
 class Visualizer(object):
+    def init_ui(self):
+        self.app = QApplication([])
+        self.user_interface = Widget()
+
     def __init__(self, has_variables=False, variables=None, has_description=False, **kwargs):
         self.variables = Variables(variables) if has_variables else None
         self.description = Description() if has_description else None
+        self.init_ui()
 
     def set_description(self, text):
         self.description.set_text(text)
@@ -58,4 +66,4 @@ class GraphVisualiser(Visualizer):
         self.model = graph_get_model(**kwargs)
 
     def next_step(self):
-        pass
+        self.user_interface.add_widget(self)

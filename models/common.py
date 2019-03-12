@@ -9,5 +9,5 @@ class Colorable(object):
 
 
 class Drawable(object):
-    def draw(self):
+    def draw(self, widget):
         pass

@@ -3,7 +3,7 @@ from models.colors import get_color
 
 
 class Vertex(Colorable, Drawable):
-    DELTA = 50
+    DELTA = 80
 
     def __init__(self, label, index, coordinates):
         super(Vertex, self).__init__()
@@ -25,7 +25,7 @@ class Vertex(Colorable, Drawable):
     def set_coordinates(self, coordinates):
         self.coordinates = coordinates
 
-    def draw(self):
+    def draw(self, widget):
         pass
 
 
@@ -45,7 +45,7 @@ class Edge(Colorable, Drawable):
             raise ValueError('Incorrect flow')
         self.current_flow = flow
 
-    def draw(self):
+    def draw(self, widget):
         pass
 
 
@@ -128,11 +128,11 @@ class Graph(Drawable):
     def fetch_coordinates(self):
         pass
 
-    def draw(self):
+    def draw(self, widget):
         for rib in self.ribs:
-            rib.draw()
+            rib.draw(widget)
         for vertex in self.vertices:
-            vertex.draw()
+            vertex.draw(widget)
 
 
 class Tree(Graph):
@@ -183,20 +183,22 @@ class Tree(Graph):
     def _fetch_depth(self, root):
         visited = [False for _ in range(len(self.vertices))]
 
-        def dfs(v, depth=0, prev=-1):
+        def dfs(v, depth=0, prev=0):
             visited[v] = True
             self.vertices[v]._depth = depth
-            self.vertices[v]._prev = self.vertices[v]
+            self.vertices[v]._prev = self.vertices[prev]
             for edge in self.ribs:
                 u = self._get_second_vertex(edge, v)
                 if u is not None and not visited[u]:
                     dfs(u, depth + 1, v)
-        dfs(root)
+        dfs(root, 0, root)
 
     def fetch_coordinates(self):
         root = self._find_root()
         self._fetch_depth(root)
-        Vertex.__lt__ = lambda self, other: self._depth < other._depth or (self._prev._depth < other._prev._depth)
+        Vertex.__lt__ = lambda self, other: self._depth < other._depth or (
+                self._depth == other._depth and self._prev.index < other._prev.index
+        )
 
         self.vertices.sort()
         l, r = 0, 0
@@ -208,8 +210,9 @@ class Tree(Graph):
             count = r - l
             num = 1
             while l < r:
-                self.vertices[l].coordinates = [self.DEFAULT_WIDTH * num / count, (depth + 1) * Vertex.DELTA]
+                self.vertices[l].coordinates = [self.DEFAULT_WIDTH * num / (count + 1), (depth + 1) * Vertex.DELTA]
                 l += 1
+                num += 1
             depth += 1
 
 
