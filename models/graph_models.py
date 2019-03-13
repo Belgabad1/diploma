@@ -1,7 +1,7 @@
 from queue import Queue
 
-from models.common import Colorable
-from models.colors import get_color
+from common.common import Colorable
+from common.colors import get_color
 
 
 class Vertex(Colorable):

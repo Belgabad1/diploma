@@ -1,9 +1,11 @@
 import copy
+from math import cos, pi, sin, tan
 
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QPainter, QPen, QColor, QFont
 from PyQt5.QtWidgets import QMainWindow, QStackedWidget, QWidget, QGridLayout
 
+from common.util import get_circle_point, get_angle, get_distance
 from models.util import Functions
 
 
@@ -125,8 +127,8 @@ class DescriptionWidget(QWidget):
 
 
 class GraphWidget(QWidget):
-    RADIUS = 50
-    DEPTH = 4
+    RADIUS = 25
+    DEPTH = 3
     DEFAULT_WIDTH = 800
     DEFAULT_HEIGHT = 600
     def __init__(self, visualiser, width, height):
@@ -143,10 +145,10 @@ class GraphWidget(QWidget):
             x_center, y_center = self.resize(x_center, y_center)
             painter.setPen(QPen(QColor(vertex.color), self.DEPTH))
             painter.setBrush(QColor(vertex.area_color))
-            painter.drawEllipse(x_center - self.RADIUS // 2, y_center - self.RADIUS // 2, self.RADIUS, self.RADIUS)
+            painter.drawEllipse(x_center - self.RADIUS, y_center - self.RADIUS, 2 * self.RADIUS, 2 * self.RADIUS)
             painter.setPen(QPen(Qt.black, self.DEPTH))
             painter.drawText(
-                x_center - self.RADIUS // 2, y_center - self.RADIUS // 2, self.RADIUS, self.RADIUS,
+                x_center - self.RADIUS, y_center - self.RADIUS, 2 * self.RADIUS, 2 * self.RADIUS,
                 Qt.AlignCenter, str(vertex.label)
             )
 
@@ -162,6 +164,20 @@ class GraphWidget(QWidget):
             x2, y2 = self.resize(x2, y2)
             painter.setPen(QPen(QColor(edge.color), self.DEPTH))
             painter.drawLine(x1, y1, x2, y2)
+            if edge.is_directed:
+                x_beg, y_beg = get_circle_point(x1, y1, x2, y2, self.RADIUS)
+                x_fin, y_fin = get_circle_point(x1, y1, x2, y2, self.RADIUS + 20)
+                painter.setPen(QPen(Qt.black, self.DEPTH))
+                painter.setBrush(QColor(Qt.white))
+                l = 20 * tan(pi / 6)
+                ang = get_angle(x1, y1, x2, y2)
+                new_x = x_fin + l * sin(pi - ang)
+                new_y = y_fin + l * cos(pi - ang)
+                painter.drawLine(x_beg, y_beg, new_x, new_y)
+                new_x = x_fin - l * sin(pi - ang)
+                new_y = y_fin - l * cos(pi - ang)
+                painter.drawLine(x_beg, y_beg, new_x, new_y)
+
 
     def paintEvent(self, event):
         painter = QPainter()
