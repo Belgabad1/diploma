@@ -1,12 +1,3 @@
-from PyQt5.QtWidgets import QApplication
-
-from models.graph_models import get_model as graph_get_model
-from models.ui import Widget
-
-app = QApplication([])
-user_interface = Widget()
-
-
 class Variables(object):
     TYPES = ['integer', 'float', 'list', 'dict', 'matrix', 'boolean']
     DEFAULT = {
@@ -20,11 +11,11 @@ class Variables(object):
 
     def __init__(self, variables):
         assert isinstance(variables, dict)
-        for k, v in variables:
+        for k, v in variables.items():
             if v not in self.TYPES:
                 raise ValueError('Variables', 'Invalid type: required one of {}, found {}'.format(str(self.TYPES), v))
         self.variables = dict()
-        for k, v in variables:
+        for k, v in variables.items():
             self.variables[k] = self.DEFAULT[v]
 
     def set_variable(self, key, value):
@@ -35,18 +26,18 @@ class Variables(object):
 
 class Description(object):
     def __init__(self):
-        self.text = ''
+        self._text = ''
 
     def set_text(self, text):
         if not isinstance(text, str):
             raise ValueError('Text must be string')
-        self.text = text
+        self._text = text
+
+    def get_text(self):
+        return self._text
 
 
 class Visualizer(object):
-    def start_program(self):
-        app.exec_()
-
     def __init__(self, has_variables=False, variables=None, has_description=False, **kwargs):
         self.variables = Variables(variables) if has_variables else None
         self.description = Description() if has_description else None
@@ -56,23 +47,3 @@ class Visualizer(object):
 
     def set_variable(self, key, value):
         self.variables.set_variable(key, value)
-
-class GraphVisualiser(Visualizer):
-    def __init__(self, **kwargs):
-        super(GraphVisualiser, self).__init__(**kwargs)
-        kwargs.pop('has_variables', '')
-        kwargs.pop('variables', '')
-        kwargs.pop('has_description', '')
-        self.model = graph_get_model(**kwargs)
-
-    def next_step(self):
-        user_interface.add_widget(self)
-
-    def set_vertex_border_color(self, index, color):
-        self.model.set_vertex_border_color(index, color)
-
-    def set_vertex_area_color(self, index, color):
-        self.model.set_vertex_area_color(index, color)
-
-    def set_edge_color(self, vertex_in, vertex_out, color):
-        self.model.set_edge_color(vertex_in, vertex_out, color)

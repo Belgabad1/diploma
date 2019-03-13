@@ -1,9 +1,11 @@
+from queue import Queue
+
 from models.common import Colorable
 from models.colors import get_color
 
 
 class Vertex(Colorable):
-    INDENT = 50
+    INDENT = 30
     DELTA = 100
 
     def __init__(self, label, index, coordinates):
@@ -46,9 +48,6 @@ class Edge(Colorable):
 
 
 class Graph():
-    DEFAULT_WIDTH = 800
-    DEFAULT_HEIGHT = 600
-
     def __validate(self, ribs, vertices, flows, coordinates):
         correct_types = (list, tuple)
         assert isinstance(ribs, correct_types)
@@ -143,6 +142,27 @@ class Graph():
         edge = self.find_rib(vertex_in, vertex_out)
         edge.set_color(color)
 
+    def set_vertices_color(self, colors):
+        for k, v in colors.items():
+            vertex = self.find_vertex(k)
+            if vertex:
+                if v.get('border'):
+                    vertex.set_border_color(v.get('border'))
+                if v.get('area'):
+                    vertex.set_area_color(v.get('area'))
+
+    def set_ribs_color(self, colors):
+        for k, v in colors.items():
+            index_in, index_out = k
+            edge = self.find_rib(index_in, index_out)
+            if edge:
+                edge.set_color(v)
+
+    def add_edge(self, index_in, index_out, max_flow=None, weight=None):
+        vertex_in = self.find_vertex(index_in)
+        vertex_out = self.find_vertex(index_out)
+        self.ribs.append(Edge(vertex_in, vertex_out, self.directed, max_flow, weight))
+
     def fetch_coordinates(self):
         pass
 
@@ -175,7 +195,7 @@ class Tree(Graph):
     def _get_second_vertex(self, edge, v):
         if edge.first_vertex.index == v:
             return edge.second_vertex.index
-        elif edge.second_vertex.index == v:
+        elif not edge.is_directed and edge.second_vertex.index == v:
             return edge.first_vertex.index
         else:
             return None
@@ -211,27 +231,43 @@ class Tree(Graph):
                     dfs(u, depth + 1, v)
         dfs(root, 0, root)
 
-    def fetch_coordinates(self):
-        root = self._find_root()
-        self._fetch_depth(root)
-        Vertex.__lt__ = lambda self, other: self._depth < other._depth or (
-                self._depth == other._depth and self._prev.index < other._prev.index
-        )
-
-        self.vertices.sort()
+    def _fetch_coordinates(self, width=800, height=600):
         l, r = 0, 0
         depth = 0
         n = len(self.vertices)
+        max_depth = self.vertices[-1]._depth
+        delta = (height - 3 * Vertex.INDENT) // max_depth
         while l < n and r < n:
             while r < n and self.vertices[r]._depth == depth:
                 r += 1
             count = r - l
             num = 1
             while l < r:
-                self.vertices[l].coordinates = [self.DEFAULT_WIDTH * num / (count + 1), Vertex.INDENT + depth * Vertex.DELTA]
+                self.vertices[l].coordinates = [width * num / (count + 1), Vertex.INDENT + depth * delta]
                 l += 1
                 num += 1
             depth += 1
+
+    def fetch_coordinates(self):
+        root = self._find_root()
+        self._fetch_depth(root)
+
+        queue = Queue()
+        queue.put(root)
+        vertices = [self.vertices[root]]
+        visited = [False for _ in range(len(self.vertices))]
+        visited[root] = True
+        while not queue.empty():
+            v = queue.get()
+            for edge in self.ribs:
+                u = self._get_second_vertex(edge, v)
+                if u is not None and not visited[u]:
+                    visited[u] = True
+                    queue.put(u)
+                    vertices.append(self.vertices[u])
+
+        self.vertices = vertices
+        self._fetch_coordinates()
 
 
 class Planar(Graph):

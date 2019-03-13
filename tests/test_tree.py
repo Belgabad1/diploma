@@ -1,6 +1,4 @@
-from PyQt5.QtWidgets import QApplication
-
-from visualizers.models import GraphVisualiser
+from visualizers.graph_visualiser import GraphVisualiser
 
 
 def init_graph():
@@ -26,17 +24,40 @@ def init_graph():
     add_ribs(10, 11)
     add_ribs(11, 12)
 
-    visualiser = GraphVisualiser(ribs=ribs)
+    visualiser = GraphVisualiser(ribs=ribs, has_variables=True, variables={'a': 'integer'}, has_description=True)
     a = [v.index for v in visualiser.model.vertices]
     assert a == [5, 3, 7, 11, 1, 6, 2, 4, 10, 13, 8, 12, 9, 0]
     for i in range(1, 14):
         assert visualiser.model.vertices[i]._depth >= visualiser.model.vertices[i - 1]._depth
+    visualiser.set_vertex_border_color(5, 'red')
+    visualiser.set_description('Стартовая вершина имеет номер 5')
     visualiser.next_step()
-    visualiser.set_vertex_area_color(5, 'red')
-    visualiser.set_vertex_border_color(11, 'yellow')
-    visualiser.set_edge_color(5, 7, 'blue')
+    visualiser.set_description('Из вершины с номером 5 можем пойти в вершина с номерами 7, 11, 3.\n'
+                               'Добавляем в очередь вершины 7, 11, 3, помечаем 5 как пройденную.\n'
+                               'Переходим в вершину 7.')
+    visualiser.set_vertices_color({
+        5: {'border': 'blue'},
+        7: {'border': 'red'},
+        11: {'border': 'green'},
+        3: {'border': 'green'}
+    })
     visualiser.next_step()
-    visualiser.start_program()
+    visualiser.set_description('Удаляем вершину с номером 0.')
+    visualiser.delete_vertex(0)
+    visualiser.next_step()
+    visualiser.set_description('Удаляем ребро (4, 11).')
+    visualiser.delete_edge(4, 11)
+    visualiser.next_step()
+    visualiser.set_description('Помечаем ребра (2, 12), (10, 9), (7, 6).\n'
+                               'Добавляем ребро (4, 11).')
+    visualiser.set_ribs_color({
+        (2, 12): 'turquoise',
+        (10, 9): 'turquoise',
+        (7, 6): 'turquoise'
+    })
+    visualiser.add_edge(4, 11)
+    visualiser.next_step()
+    visualiser.show()
 
 if __name__ == '__main__':
     init_graph()
