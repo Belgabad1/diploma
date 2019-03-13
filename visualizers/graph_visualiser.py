@@ -1,7 +1,7 @@
 from PyQt5.QtWidgets import QApplication
 
 from models.graph_models import get_model as graph_get_model
-from models.ui import Widget
+from user_interface.ui import Widget
 from visualizers.models import Visualizer
 
 app = QApplication([])

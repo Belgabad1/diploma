@@ -1,5 +1,5 @@
 import copy
-from math import cos, pi, sin, tan
+from math import cos, pi, sin, tan, atan, sqrt
 
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QPainter, QPen, QColor, QFont
@@ -155,6 +155,27 @@ class GraphWidget(QWidget):
     def resize(self, x, y):
         return x * self.width / self.DEFAULT_WIDTH, y * self.height / self.DEFAULT_HEIGHT
 
+    def _draw_direct(self, painter, x1, y1, x2, y2, line_length=12, offset=15, angle=pi/6):
+        x_beg, y_beg = get_circle_point(x1, y1, x2, y2, self.RADIUS)
+        x_fin, y_fin = get_circle_point(x1, y1, x2, y2, self.RADIUS + line_length)
+        l = offset * tan(angle)
+        ang = get_angle(x1, y1, x2, y2)
+        new_x = x_fin + l * sin(pi - ang)
+        new_y = y_fin + l * cos(pi - ang)
+        painter.drawLine(x_beg, y_beg, new_x, new_y)
+        new_x = x_fin - l * sin(pi - ang)
+        new_y = y_fin - l * cos(pi - ang)
+        painter.drawLine(x_beg, y_beg, new_x, new_y)
+
+    def _draw_weight(self, painter, x1, y1, x2, y2, text):
+        x_fin, y_fin = (x1 + x2) / 2, (y1 + y2) / 2
+        l = 15
+        ang = get_angle(x1, y1, x2, y2)
+        new_x = x_fin - l * sin(pi - ang)
+        new_y = y_fin - l * cos(pi - ang)
+        painter.setPen(QPen(Qt.black, self.DEPTH))
+        painter.drawText(new_x - 15, new_y - 15, 30, 30, Qt.AlignCenter, text)
+
     def _draw_edges(self, painter):
         ribs = self.visualiser.model.ribs
         for edge in ribs:
@@ -165,19 +186,9 @@ class GraphWidget(QWidget):
             painter.setPen(QPen(QColor(edge.color), self.DEPTH))
             painter.drawLine(x1, y1, x2, y2)
             if edge.is_directed:
-                x_beg, y_beg = get_circle_point(x1, y1, x2, y2, self.RADIUS)
-                x_fin, y_fin = get_circle_point(x1, y1, x2, y2, self.RADIUS + 20)
-                painter.setPen(QPen(Qt.black, self.DEPTH))
-                painter.setBrush(QColor(Qt.white))
-                l = 20 * tan(pi / 6)
-                ang = get_angle(x1, y1, x2, y2)
-                new_x = x_fin + l * sin(pi - ang)
-                new_y = y_fin + l * cos(pi - ang)
-                painter.drawLine(x_beg, y_beg, new_x, new_y)
-                new_x = x_fin - l * sin(pi - ang)
-                new_y = y_fin - l * cos(pi - ang)
-                painter.drawLine(x_beg, y_beg, new_x, new_y)
-
+                self._draw_direct(painter, x1, y1, x2, y2)
+            if edge.weight:
+                self._draw_weight(painter, x1, y1, x2, y2, str(edge.weight))
 
     def paintEvent(self, event):
         painter = QPainter()

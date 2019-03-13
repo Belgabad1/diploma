@@ -71,7 +71,7 @@ class Graph():
             assert isinstance(i, correct_types)
             assert len(i) == n
 
-    def __init__(self, ribs=None, vertices=None, directed=False, has_flow=False, flows=None, coordinates=None):
+    def __init__(self, ribs=None, weighted=None, vertices=None, directed=False, has_flow=False, flows=None, coordinates=None):
         self.__validate(ribs, vertices, flows, coordinates)
         self.vertices = []
         self.ribs = []
@@ -89,7 +89,7 @@ class Graph():
                         max_flow = flows[i][j] if flows else 0
                     else:
                         max_flow = None
-                    weight = ribs[i][j] if directed else None
+                    weight = ribs[i][j] if weighted else None
                     if directed or (not directed and not self.find_rib(i, j)):
                         self.ribs.append(Edge(self.vertices[i], self.vertices[j], directed, max_flow, weight))
         if not coordinates:
@@ -185,9 +185,9 @@ class Tree(Graph):
             is_tree = True
             visited[v] = True
             for i in range(len(ribs[v])):
-                if i != prev and i != v and visited[i] and ribs[v][i] is not None:
+                if i != prev and i != v and visited[i] and (ribs[v][i] is not None or ribs[i][v] is not None):
                     return False
-                elif not visited[i] and ribs[v][i] is not None:
+                elif not visited[i] and (ribs[v][i] is not None or ribs[i][v] is not None):
                     is_tree &= dfs(i, v)
             return is_tree
         result = dfs(0)
@@ -198,7 +198,7 @@ class Tree(Graph):
     def _get_second_vertex(self, edge, v):
         if edge.first_vertex.index == v:
             return edge.second_vertex.index
-        elif not edge.is_directed and edge.second_vertex.index == v:
+        elif edge.second_vertex.index == v:
             return edge.first_vertex.index
         else:
             return None
