@@ -36,23 +36,46 @@ class Widget(QMainWindow):
             current_index += 1
         self.widget.setCurrentIndex(current_index)
 
+    def widgets(self):
+        return [self.widget.widget(i) for i in range(self.widget.count())]
+
+    def resizeEvent(self, QResizeEvent):
+        for widget in self.widgets():
+            if getattr(widget, 'set_size', None):
+                widget.set_size(self.size())
+
 
 class MainWidget(QWidget):
     def __init__(self, central_widget, visualiser, size):
         super().__init__()
+        self.visualiser = visualiser
+        self.central_widget = central_widget
         width, height = size.width(), size.height()
         grid = QGridLayout()
-        l = 1
-        r = 6
-        if visualiser.variables:
-            grid.addWidget(VariablesWidget(visualiser.variables, width, height // 6), l, 0)
+        l, r = 1, 6
+        if self.visualiser.variables:
+            self.variables = VariablesWidget(visualiser.variables, width, height // 6)
+            grid.addWidget(self.variables, l, 0)
             l += 1
-        if visualiser.description:
-            grid.addWidget(DescriptionWidget(visualiser.description, width, height // 6), r, 0)
+        if self.visualiser.description:
+            self.description = DescriptionWidget(visualiser.description, width, height // 6)
+            grid.addWidget(self.description, r, 0)
             r -= 1
-        grid.addWidget(central_widget(visualiser, width, height * (r - l + 1) // 6), l, 0, r, 0)
+        self.central = central_widget(visualiser, width, height * (r - l + 1) // 6)
+        grid.addWidget(self.central, l, 0, r, 0)
         self.setLayout(grid)
         self.show()
+
+    def set_size(self, size):
+        width, height = size.width(), size.height()
+        r = 6
+        if getattr(self, 'variables', None):
+            self.variables.set_size(width, height // 6)
+            r -= 1
+        if getattr(self, 'description', None):
+            self.description.set_size(width, height // 6)
+            r -= 1
+        self.central.set_size(width, height * r // 6)
 
 
 class VariablesWidget(QWidget):
@@ -72,6 +95,7 @@ class VariablesWidget(QWidget):
     def set_size(self, width, height):
         self.width = width
         self.height = height
+        self.repaint()
 
 
 class DescriptionWidget(QWidget):
@@ -97,37 +121,46 @@ class DescriptionWidget(QWidget):
     def set_size(self, width, height):
         self.width = width
         self.height = height
+        self.repaint()
+
 
 class GraphWidget(QWidget):
-    radius = 50
-    depth = 4
+    RADIUS = 50
+    DEPTH = 4
+    DEFAULT_WIDTH = 800
+    DEFAULT_HEIGHT = 600
     def __init__(self, visualiser, width, height):
         super().__init__()
         self.width = width
         self.height = height
         self.visualiser = copy.deepcopy(visualiser)
-        self.visualiser.model._fetch_coordinates(self.width, self.height)
         self.show()
 
     def _draw_vertices(self, painter):
         vertices = self.visualiser.model.vertices
         for vertex in vertices:
             x_center, y_center = vertex.coordinates
-            painter.setPen(QPen(QColor(vertex.color), self.depth))
+            x_center, y_center = self.resize(x_center, y_center)
+            painter.setPen(QPen(QColor(vertex.color), self.DEPTH))
             painter.setBrush(QColor(vertex.area_color))
-            painter.drawEllipse(x_center - self.radius // 2, y_center - self.radius // 2, self.radius, self.radius)
-            painter.setPen(QPen(Qt.black, self.depth))
+            painter.drawEllipse(x_center - self.RADIUS // 2, y_center - self.RADIUS // 2, self.RADIUS, self.RADIUS)
+            painter.setPen(QPen(Qt.black, self.DEPTH))
             painter.drawText(
-                x_center - self.radius // 2, y_center - self.radius // 2, self.radius, self.radius,
+                x_center - self.RADIUS // 2, y_center - self.RADIUS // 2, self.RADIUS, self.RADIUS,
                 Qt.AlignCenter, str(vertex.label)
             )
+
+    def resize(self, x, y):
+        return x * self.width / self.DEFAULT_WIDTH, y * self.height / self.DEFAULT_HEIGHT
 
     def _draw_edges(self, painter):
         ribs = self.visualiser.model.ribs
         for edge in ribs:
             x1, y1 = edge.first_vertex.coordinates
+            x1, y1 = self.resize(x1, y1)
             x2, y2 = edge.second_vertex.coordinates
-            painter.setPen(QPen(QColor(edge.color), self.depth))
+            x2, y2 = self.resize(x2, y2)
+            painter.setPen(QPen(QColor(edge.color), self.DEPTH))
             painter.drawLine(x1, y1, x2, y2)
 
     def paintEvent(self, event):
@@ -135,6 +168,11 @@ class GraphWidget(QWidget):
         painter.begin(self)
         self._draw_edges(painter)
         self._draw_vertices(painter)
-        pen = QPen(Qt.black, self.depth, Qt.SolidLine)
+        pen = QPen(Qt.black, self.DEPTH, Qt.SolidLine)
         painter.setPen(pen)
         painter.end()
+
+    def set_size(self, width, height):
+        self.width = width
+        self.height = height
+        self.repaint()

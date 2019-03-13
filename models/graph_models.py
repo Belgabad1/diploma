@@ -5,7 +5,7 @@ from models.colors import get_color
 
 
 class Vertex(Colorable):
-    INDENT = 30
+    INDENT = 50
     DELTA = 100
 
     def __init__(self, label, index, coordinates):
@@ -79,8 +79,8 @@ class Graph():
 
         for i in range(len(ribs)):
             label = vertices[i] if vertices else i
-            coordinates = coordinates[i] if coordinates else None
-            self.vertices.append(Vertex(label, i, coordinates))
+            current_coordinates = coordinates[i] if coordinates else None
+            self.vertices.append(Vertex(label, i, current_coordinates))
 
         for i in range(len(ribs)):
             for j in range(len(ribs[i])):
@@ -123,11 +123,14 @@ class Graph():
             elif not self.directed and rib.second_vertex == vertex_in and rib.first_vertex == vertex_out:
                 return rib
 
+    def find_ribs(self, vertex):
+        return [edge for edge in self.ribs if edge.first_vertex == vertex or edge.second_vertex == vertex]
+
     def delete_vertex(self, index):
         vertex = self.find_vertex(index)
-        for rib in self.ribs:
-            if rib.first_vertex == vertex or rib.second_vertex == vertex:
-                self.ribs.remove(rib)
+        ribs = self.find_ribs(vertex)
+        for rib in ribs:
+            self.ribs.remove(rib)
         self.vertices.remove(vertex)
 
     def delete_edge(self, vertex_in_index, vertex_out_index):
