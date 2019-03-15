@@ -9,9 +9,8 @@ def init_graph():
         ribs[x - 1][y - 1] = 1
 
     add_ribs(1, 2)
-    add_ribs(3, 1)
+    add_ribs(1, 3)
     add_ribs(1, 4)
-    add_ribs(2, 3)
     add_ribs(4, 2)
     add_ribs(3, 4)
     add_ribs(3, 5)
@@ -24,7 +23,7 @@ def init_graph():
 
     visualiser = GraphVisualiser(ribs=ribs, coordinates=[
         [100, 200], [100, 400], [300, 200], [300, 400], [500, 400], [700, 200], [700, 400], [500, 300]
-    ], has_description=True, directed=True)
+    ], has_description=True, directed=True, weighted=True)
     visualiser.set_description('Ориентированный граф с заданными координатами')
     visualiser.next_step()
     visualiser.delete_vertex(4)
