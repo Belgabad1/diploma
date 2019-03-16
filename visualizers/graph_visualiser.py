@@ -40,8 +40,17 @@ class GraphVisualiser(Visualizer):
     def delete_edge(self, index_in, index_out):
         self.model.delete_edge(index_in, index_out)
 
-    def add_edge(self, index_in, index_out):
-        self.model.add_edge(index_in, index_out)
+    def add_vertex(self, coordinates, label=None):
+        self.model.add_vertex(label, coordinates)
+
+    def add_edge(self, index_in, index_out, max_flow=None, weight=1):
+        self.model.add_edge(index_in, index_out, max_flow=max_flow, weight=weight)
+
+    def set_flow(self, index_in, index_out, flow):
+        self.model.set_flow(index_in, index_out, flow)
+
+    def set_flows(self, flows):
+        self.model.set_flows(flows)
 
     def show(self):
         app.exec_()

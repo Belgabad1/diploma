@@ -11,7 +11,7 @@ class Vertex(Colorable):
     def __init__(self, label, index, coordinates):
         super(Vertex, self).__init__()
 
-        self.label = label
+        self.label = label or index
         self.index = index
         self.area_color = get_color('white')
         self.color = get_color()
@@ -76,6 +76,8 @@ class Graph():
         self.vertices = []
         self.ribs = []
         self.directed = directed
+        self.max_index = len(ribs)
+        self.flow = has_flow
 
         for i in range(len(ribs)):
             label = vertices[i] if vertices else i
@@ -141,6 +143,13 @@ class Graph():
         edge = self.find_rib(vertex_in_index, vertex_out_index)
         edge.set_current_flow(flow)
 
+    def set_flows(self, flows):
+        for k, v in flows.items():
+            index_in, index_out = k
+            edge = self.find_rib(index_in, index_out)
+            if edge:
+                edge.set_current_flow(v)
+
     def set_edge_color(self, vertex_in, vertex_out, color):
         edge = self.find_rib(vertex_in, vertex_out)
         edge.set_color(color)
@@ -161,19 +170,17 @@ class Graph():
             if edge:
                 edge.set_color(v)
 
-    def add_edge(self, index_in, index_out, max_flow=None, weight=None):
+    def add_edge(self, index_in, index_out, max_flow=None, weight=1):
         vertex_in = self.find_vertex(index_in)
         vertex_out = self.find_vertex(index_out)
         self.ribs.append(Edge(vertex_in, vertex_out, self.directed, max_flow, weight))
 
+    def add_vertex(self, label, coordinates):
+        self.vertices.append(Vertex(label, self.max_index, coordinates))
+        self.max_index += 1
+
     def fetch_coordinates(self):
         pass
-
-    def draw(self, widget):
-        for rib in self.ribs:
-            rib.draw(widget)
-        for vertex in self.vertices:
-            vertex.draw(widget)
 
 
 class Tree(Graph):

@@ -101,6 +101,9 @@ class VariablesWidget(QWidget):
 
 
 class DescriptionWidget(QWidget):
+    MIN_FONT_SIZE = 12
+    MAX_FONT_SIZE = 18
+
     def __init__(self, description, width, height):
         super().__init__()
         self.width = width
@@ -108,11 +111,16 @@ class DescriptionWidget(QWidget):
         self.description = copy.deepcopy(description)
         self.show()
 
+    @property
+    def FONT_SIZE(self):
+        size = min(self.width, self.height) // 7
+        return max(min(self.MAX_FONT_SIZE, size), self.MIN_FONT_SIZE)
+
     def paintEvent(self, QPaintEvent):
         painter = QPainter()
         painter.begin(self)
         painter.setPen(QPen(Qt.black, 7))
-        painter.setFont(QFont('Helvetica', 16))
+        painter.setFont(QFont('Helvetica', self.FONT_SIZE))
         painter.drawText(
             0, 0, self.width, self.height,
             Qt.AlignCenter, self.description.get_text()
@@ -127,16 +135,23 @@ class DescriptionWidget(QWidget):
 
 
 class GraphWidget(QWidget):
-    RADIUS = 25
+    MIN_RADIUS = 20
+    MAX_RADIUS = 30
     DEPTH = 3
     DEFAULT_WIDTH = 800
     DEFAULT_HEIGHT = 600
+
     def __init__(self, visualiser, width, height):
         super().__init__()
         self.width = width
         self.height = height
         self.visualiser = copy.deepcopy(visualiser)
         self.show()
+
+    @property
+    def RADIUS(self):
+        radius = min(self.width, self.height) // 20
+        return max(min(self.MAX_RADIUS, radius), self.MIN_RADIUS)
 
     def _draw_vertices(self, painter):
         vertices = self.visualiser.model.vertices
@@ -176,6 +191,18 @@ class GraphWidget(QWidget):
         painter.setPen(QPen(Qt.black, self.DEPTH))
         painter.drawText(new_x - 15, new_y - 15, 30, 30, Qt.AlignCenter, text)
 
+    def _get_flow_text(self, edge):
+        return '{}/{}'.format(edge.current_flow, edge.max_flow)
+
+    def _draw_flow(self, painter, x1, y1, x2, y2, text):
+        x_fin, y_fin = (x1 + x2) / 2, (y1 + y2) / 2
+        l = 16
+        ang = get_angle(x1, y1, x2, y2)
+        new_x = x_fin + l * sin(pi - ang)
+        new_y = y_fin + l * cos(pi - ang)
+        painter.setPen(QPen(Qt.black, self.DEPTH))
+        painter.drawText(new_x - 20, new_y - 20, 40, 40, Qt.AlignCenter, text)
+
     def _draw_edges(self, painter):
         ribs = self.visualiser.model.ribs
         for edge in ribs:
@@ -189,6 +216,8 @@ class GraphWidget(QWidget):
                 self._draw_direct(painter, x1, y1, x2, y2)
             if edge.weight:
                 self._draw_weight(painter, x1, y1, x2, y2, str(edge.weight))
+            if edge.max_flow:
+                self._draw_flow(painter, x1, y1, x2, y2, self._get_flow_text(edge))
 
     def paintEvent(self, event):
         painter = QPainter()
