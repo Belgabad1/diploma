@@ -5,9 +5,6 @@ from common.colors import get_color
 
 
 class Vertex(Colorable):
-    INDENT = 50
-    DELTA = 100
-
     def __init__(self, label, index, coordinates):
         super(Vertex, self).__init__()
 
@@ -19,6 +16,7 @@ class Vertex(Colorable):
 
         self._depth = None
         self._prev = None
+        self._height = None
 
     def set_border_color(self, color):
         self.color = get_color(color)
@@ -170,7 +168,7 @@ class Graph():
             if edge:
                 edge.set_color(v)
 
-    def add_edge(self, index_in, index_out, max_flow=None, weight=1):
+    def add_edge(self, index_in, index_out, max_flow=None, weight=None):
         vertex_in = self.find_vertex(index_in)
         vertex_out = self.find_vertex(index_out)
         self.ribs.append(Edge(vertex_in, vertex_out, self.directed, max_flow, weight))
@@ -257,29 +255,57 @@ class Forest(Graph):
         roots = [self._find_root(component) for component in components]
         return roots
 
-    def _fetch_coordinates(self, width=800, height=600):
+    def _fetch_height(self, roots):
+        visited = [False for _ in range(len(self.vertices))]
+
+        def dfs(v):
+            visited[v] = True
+            self.vertices[v]._height = 1
+            for edge in self.ribs:
+                u = self._get_second_vertex(edge, v)
+                if u is not None and not visited[u]:
+                    dfs(u)
+                    self.vertices[v]._height = max(self.vertices[v]._height, self.vertices[u]._height + 1)
+
+        for root in roots:
+            dfs(root)
+
+    def _fetch_coordinates(self, width=1200, height=900, indent=45):
         l, r = 0, 0
         depth = 0
         n = len(self.vertices)
         max_depth = self.vertices[-1]._depth
-        delta = (height - 3 * Vertex.INDENT) // max_depth
+        delta = (height - 3 * indent) // max_depth
         while l < n and r < n:
             while r < n and self.vertices[r]._depth == depth:
                 r += 1
             count = r - l
             num = 1
             while l < r:
-                self.vertices[l].coordinates = [width * num / (count + 1), Vertex.INDENT + depth * delta]
+                self.vertices[l].coordinates = [width * num / (count + 1), indent + depth * delta]
                 l += 1
                 num += 1
             depth += 1
 
+    def _sort_vertices_by_heights(self, vertices):
+        sorted_vertices = sorted(vertices, key=lambda index: -self.vertices[index]._height)
+        even_vertices, odd_vertices, result = [], [], []
+        for i in range(0, len(vertices), 2):
+            even_vertices.append(sorted_vertices[i])
+        for i in range(1, len(vertices), 2):
+            odd_vertices.append(sorted_vertices[i])
+        if odd_vertices:
+            even_vertices.extend(reversed(odd_vertices))
+        return even_vertices
+
     def fetch_coordinates(self):
         roots = self._find_roots()
+        self._fetch_height(roots)
         vertices = []
         visited = [False for _ in range(len(self.vertices))]
 
         queue = Queue()
+        roots = self._sort_vertices_by_heights(roots)
         for root in roots:
             self.vertices[root]._depth = 0
             visited[root] = True
@@ -287,13 +313,17 @@ class Forest(Graph):
             queue.put(root)
         while not queue.empty():
             v = queue.get()
+            sorted_vertices = []
             for edge in self.ribs:
                 u = self._get_second_vertex(edge, v)
                 if u is not None and not visited[u]:
                     self.vertices[u]._depth = self.vertices[v]._depth + 1
                     visited[u] = True
-                    queue.put(u)
-                    vertices.append(self.vertices[u])
+                    sorted_vertices.append(u)
+            sorted_vertices = self._sort_vertices_by_heights(sorted_vertices)
+            for vertex in sorted_vertices:
+                queue.put(vertex)
+                vertices.append(self.vertices[vertex])
 
         self.vertices = vertices
         self._fetch_coordinates()

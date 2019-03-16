@@ -40,4 +40,4 @@ COLORS = {
 
 
 def get_color(color='default'):
-    return COLORS.get(color, COLORS['default'])
+    return COLORS.get(color, color)

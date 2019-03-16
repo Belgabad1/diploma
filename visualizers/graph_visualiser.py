@@ -43,7 +43,7 @@ class GraphVisualiser(Visualizer):
     def add_vertex(self, coordinates, label=None):
         self.model.add_vertex(label, coordinates)
 
-    def add_edge(self, index_in, index_out, max_flow=None, weight=1):
+    def add_edge(self, index_in, index_out, max_flow=None, weight=None):
         self.model.add_edge(index_in, index_out, max_flow=max_flow, weight=weight)
 
     def set_flow(self, index_in, index_out, flow):

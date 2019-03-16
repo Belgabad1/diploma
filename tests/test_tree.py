@@ -24,7 +24,7 @@ def init_graph():
     add_ribs(10, 11)
     add_ribs(11, 12)
 
-    visualiser = GraphVisualiser(ribs=ribs, has_variables=True, variables={'a': 'integer'}, has_description=True)
+    visualiser = GraphVisualiser(ribs=ribs, has_description=True)
     for i in range(1, 14):
         assert visualiser.model.vertices[i]._depth >= visualiser.model.vertices[i - 1]._depth
     visualiser.set_vertex_border_color(5, 'red')
