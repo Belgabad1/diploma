@@ -183,23 +183,26 @@ class Graph():
         pass
 
 
-class Tree(Graph):
+class Forest(Graph):
+    name = 'forest'
+
     @staticmethod
-    def is_tree(ribs):
+    def is_forest(ribs):
         visited = [False for _ in range(len(ribs))]
 
         def dfs(v, prev=-1):
-            is_tree = True
+            is_forest = True
             visited[v] = True
             for i in range(len(ribs[v])):
                 if i != prev and i != v and visited[i] and (ribs[v][i] is not None or ribs[i][v] is not None):
                     return False
                 elif not visited[i] and (ribs[v][i] is not None or ribs[i][v] is not None):
-                    is_tree &= dfs(i, v)
-            return is_tree
-        result = dfs(0)
-        for i in visited:
-            result = result & i
+                    is_forest &= dfs(i, v)
+            return is_forest
+        result = True
+        for i in range(len(ribs)):
+            if not visited:
+                result = result & dfs(i)
         return result
 
     def _get_second_vertex(self, edge, v):
@@ -210,7 +213,7 @@ class Tree(Graph):
         else:
             return None
 
-    def _find_root(self):
+    def _find_root(self, component):
         visited = [False for _ in range(len(self.vertices))]
 
         def dfs(v, depth=0):
@@ -223,23 +226,36 @@ class Tree(Graph):
             return result_depth
 
         depths = []
-        for v in range(len(self.vertices)):
+        for v in component:
             visited = [False for _ in range(len(self.vertices))]
             depths.append(dfs(v))
-        return depths.index(min(depths))
+        return component[depths.index(min(depths))]
 
-    def _fetch_depth(self, root):
+    def _find_components(self):
         visited = [False for _ in range(len(self.vertices))]
+        components = []
+        current_component = []
 
-        def dfs(v, depth=0, prev=0):
+        def dfs(v):
             visited[v] = True
-            self.vertices[v]._depth = depth
-            self.vertices[v]._prev = self.vertices[prev]
+            current_component.append(v)
             for edge in self.ribs:
                 u = self._get_second_vertex(edge, v)
                 if u is not None and not visited[u]:
-                    dfs(u, depth + 1, v)
-        dfs(root, 0, root)
+                    dfs(u)
+
+        for i in range(len(self.vertices)):
+            if not visited[i]:
+                dfs(i)
+                components.append(sorted(current_component))
+                current_component = []
+
+        return components
+
+    def _find_roots(self):
+        components = self._find_components()
+        roots = [self._find_root(component) for component in components]
+        return roots
 
     def _fetch_coordinates(self, width=800, height=600):
         l, r = 0, 0
@@ -259,19 +275,22 @@ class Tree(Graph):
             depth += 1
 
     def fetch_coordinates(self):
-        root = self._find_root()
-        self._fetch_depth(root)
+        roots = self._find_roots()
+        vertices = []
+        visited = [False for _ in range(len(self.vertices))]
 
         queue = Queue()
-        queue.put(root)
-        vertices = [self.vertices[root]]
-        visited = [False for _ in range(len(self.vertices))]
-        visited[root] = True
+        for root in roots:
+            self.vertices[root]._depth = 0
+            visited[root] = True
+            vertices.append(self.vertices[root])
+            queue.put(root)
         while not queue.empty():
             v = queue.get()
             for edge in self.ribs:
                 u = self._get_second_vertex(edge, v)
                 if u is not None and not visited[u]:
+                    self.vertices[u]._depth = self.vertices[v]._depth + 1
                     visited[u] = True
                     queue.put(u)
                     vertices.append(self.vertices[u])
@@ -281,6 +300,8 @@ class Tree(Graph):
 
 
 class Planar(Graph):
+    name = 'planar'
+
     @staticmethod
     def is_planar(ribs):
         pass
@@ -289,10 +310,12 @@ class Planar(Graph):
         pass
 
 
+MODELS = [Forest, Planar]
+
+
 def get_model(**kwargs):
     ribs = kwargs['ribs']
-    if Tree.is_tree(ribs):
-        return Tree(**kwargs)
-    if Planar.is_planar(ribs):
-        return Planar(**kwargs)
+    for model in MODELS:
+        if getattr(model, 'is_{}'.format(model.name))(ribs):
+            return model(**kwargs)
     return Graph(**kwargs)

@@ -135,7 +135,7 @@ class DescriptionWidget(QWidget):
 
 
 class GraphWidget(QWidget):
-    MIN_RADIUS = 20
+    MIN_RADIUS = 10
     MAX_RADIUS = 30
     DEPTH = 3
     DEFAULT_WIDTH = 800
@@ -150,7 +150,7 @@ class GraphWidget(QWidget):
 
     @property
     def RADIUS(self):
-        radius = min(self.width, self.height) // 20
+        radius = min(self.width, self.height) // 30
         return max(min(self.MAX_RADIUS, radius), self.MIN_RADIUS)
 
     def _draw_vertices(self, painter):
