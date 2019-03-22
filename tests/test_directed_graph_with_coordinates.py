@@ -5,15 +5,17 @@ def init_graph():
     ribs = list(list(None for i in range(7)) for _ in range(7))
     flows = list(list(None for i in range(7)) for _ in range(7))
 
-    def add_ribs(x, y, flow=1):
+    def add_ribs(x, y, flow=1, doubled=False):
 
         ribs[x - 1][y - 1] = 1
+        if doubled:
+            ribs[y - 1][x - 1] = 1
         flows[x - 1][y - 1] = flow
 
-    add_ribs(1, 2, 5)
+    add_ribs(1, 2, 5, doubled=True)
     add_ribs(1, 3, 6)
     add_ribs(1, 4, 4)
-    add_ribs(4, 2, 6)
+    add_ribs(4, 2, 6, doubled=True)
     add_ribs(3, 4, 9)
     add_ribs(3, 5, 10)
     add_ribs(5, 4, 1)
@@ -22,12 +24,13 @@ def init_graph():
     add_ribs(6, 7, 3)
 
     visualiser = GraphVisualiser(ribs=ribs, coordinates=[
-        [100, 200], [100, 400], [300, 200], [300, 400], [500, 400], [700, 200], [700, 400]
+        [100, 200], [100, 600], [400, 200], [400, 600], [700, 600], [1000, 200], [1000, 600]
     ], has_description=True, directed=True, weighted=True, has_flow=True, flows=flows)
     visualiser.set_description('Ориентированный граф с заданными координатами')
     visualiser.next_step()
-    visualiser.add_vertex([500, 300])
+    visualiser.add_vertex([700, 400])
     visualiser.add_edge(2, 7, max_flow=4)
+    visualiser.add_edge(7, 2, max_flow=8)
     visualiser.add_edge(7, 5, max_flow=6)
     visualiser.set_description('Добавлена вершина 7 и ребра (2, 7), (7, 5)')
     visualiser.next_step()

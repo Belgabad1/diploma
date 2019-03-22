@@ -1,12 +1,12 @@
 import copy
-from math import cos, pi, sin, tan, atan, sqrt
+from math import cos, pi, sin, tan
 
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QPainter, QPen, QColor, QFont
 from PyQt5.QtWidgets import QMainWindow, QStackedWidget, QWidget, QGridLayout
 
-from common.util import get_circle_point, get_angle, get_distance
-from models.util import Functions
+from common.util import get_circle_point, get_angle, get_rect_point, get_arc_point, get_rect_width_height
+from user_interface.util import Functions
 
 
 class Widget(QMainWindow):
@@ -176,11 +176,23 @@ class GraphWidget(QWidget):
     def resize(self, x, y):
         return x * self.width / self.DEFAULT_WIDTH, y * self.height / self.DEFAULT_HEIGHT
 
-    def _draw_direct(self, painter, x1, y1, x2, y2, line_length=12, offset=15, angle=pi/6):
+    def _draw_straight_direct(self, painter, x1, y1, x2, y2, line_length=12, offset=15, angle=pi/6):
         x_beg, y_beg = get_circle_point(x1, y1, x2, y2, self.RADIUS)
         x_fin, y_fin = get_circle_point(x1, y1, x2, y2, self.RADIUS + line_length)
         l = offset * tan(angle)
         ang = get_angle(x1, y1, x2, y2)
+        new_x = x_fin + l * sin(pi - ang)
+        new_y = y_fin + l * cos(pi - ang)
+        painter.drawLine(x_beg, y_beg, new_x, new_y)
+        new_x = x_fin - l * sin(pi - ang)
+        new_y = y_fin - l * cos(pi - ang)
+        painter.drawLine(x_beg, y_beg, new_x, new_y)
+
+    def _draw_arc_direct(self, painter, x1, y1, x2, y2, top, line_length=12, offset=15, angle=pi/6):
+        x_beg, y_beg = get_arc_point(x1, y1, x2, y2, top, self.RADIUS)
+        x_fin, y_fin = get_circle_point(x_beg, y_beg, x2, y2, self.RADIUS + line_length)
+        l = offset * tan(angle)
+        ang = get_angle(x_beg, y_beg, x2, y2)
         new_x = x_fin + l * sin(pi - ang)
         new_y = y_fin + l * cos(pi - ang)
         painter.drawLine(x_beg, y_beg, new_x, new_y)
@@ -217,9 +229,24 @@ class GraphWidget(QWidget):
             x2, y2 = edge.second_vertex.coordinates
             x2, y2 = self.resize(x2, y2)
             painter.setPen(QPen(QColor(edge.color), self.DEPTH))
-            painter.drawLine(x1, y1, x2, y2)
+            has_clone = False
+            top = None
+            if not edge.is_directed or not self.visualiser.model.find_rib(edge.second_vertex.index, edge.first_vertex.index):
+                painter.drawLine(x1, y1, x2, y2)
+            else:
+                has_clone = True
+                top = edge.first_vertex.index < edge.second_vertex.index
+                x, y, angle = get_rect_point(x1, y1, x2, y2, top)
+                width, height = get_rect_width_height(x1, y1, x2, y2)
+                delta_angle = 90
+                if x1 == x2 or y1 == y2:
+                    delta_angle = 180
+                painter.drawArc(x, y, width * 2, height * 2, angle * 16, delta_angle * 16)
             if edge.is_directed:
-                self._draw_direct(painter, x1, y1, x2, y2)
+                if has_clone:
+                    pass
+                else:
+                    self._draw_straight_direct(painter, x1, y1, x2, y2)
             if edge.weight:
                 self._draw_weight(painter, x1, y1, x2, y2, str(edge.weight))
             if edge.max_flow:
