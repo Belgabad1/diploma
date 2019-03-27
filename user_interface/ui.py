@@ -135,7 +135,7 @@ class DescriptionWidget(QWidget):
 
 
 class GraphWidget(QWidget):
-    MIN_RADIUS = 20
+    MIN_RADIUS = 15
     MAX_RADIUS = 25
     MIN_DEPTH = 3
     MAX_DEPTH = 4
