@@ -8,8 +8,6 @@ def init_graph():
     def add_ribs(x, y, flow=1, doubled=False):
 
         ribs[x - 1][y - 1] = 1
-        if doubled:
-            ribs[y - 1][x - 1] = 1
         flows[x - 1][y - 1] = flow
 
     add_ribs(1, 2, 5, doubled=True)
@@ -30,7 +28,6 @@ def init_graph():
     visualiser.next_step()
     visualiser.add_vertex([700, 400])
     visualiser.add_edge(2, 7, max_flow=4)
-    visualiser.add_edge(7, 2, max_flow=8)
     visualiser.add_edge(7, 5, max_flow=6)
     visualiser.set_description('Добавлена вершина 7 и ребра (2, 7), (7, 5)')
     visualiser.next_step()

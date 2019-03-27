@@ -135,12 +135,10 @@ class DescriptionWidget(QWidget):
 
 
 class GraphWidget(QWidget):
-    MIN_RADIUS = 15
-    MAX_RADIUS = 30
+    MIN_RADIUS = 20
+    MAX_RADIUS = 25
     MIN_DEPTH = 3
     MAX_DEPTH = 4
-    DEFAULT_WIDTH = 1200
-    DEFAULT_HEIGHT = 900
 
     def __init__(self, visualiser, width, height):
         super().__init__()
@@ -151,7 +149,7 @@ class GraphWidget(QWidget):
 
     @property
     def RADIUS(self):
-        radius = min(self.width, self.height) // 30
+        radius = min(self.width, self.height) // 25
         return max(min(self.MAX_RADIUS, radius), self.MIN_RADIUS)
 
     @property
@@ -174,7 +172,7 @@ class GraphWidget(QWidget):
             )
 
     def resize(self, x, y):
-        return x * self.width / self.DEFAULT_WIDTH, y * self.height / self.DEFAULT_HEIGHT
+        return x * self.width / self.visualiser.get_width(), y * self.height / self.visualiser.get_height()
 
     def _draw_straight_direct(self, painter, x1, y1, x2, y2, line_length=12, offset=15, angle=pi/6):
         x_beg, y_beg = get_circle_point(x1, y1, x2, y2, self.RADIUS)
@@ -229,24 +227,9 @@ class GraphWidget(QWidget):
             x2, y2 = edge.second_vertex.coordinates
             x2, y2 = self.resize(x2, y2)
             painter.setPen(QPen(QColor(edge.color), self.DEPTH))
-            has_clone = False
-            top = None
-            if not edge.is_directed or not self.visualiser.model.find_rib(edge.second_vertex.index, edge.first_vertex.index):
-                painter.drawLine(x1, y1, x2, y2)
-            else:
-                has_clone = True
-                top = edge.first_vertex.index < edge.second_vertex.index
-                x, y, angle = get_rect_point(x1, y1, x2, y2, top)
-                width, height = get_rect_width_height(x1, y1, x2, y2)
-                delta_angle = 90
-                if x1 == x2 or y1 == y2:
-                    delta_angle = 180
-                painter.drawArc(x, y, width * 2, height * 2, angle * 16, delta_angle * 16)
+            painter.drawLine(x1, y1, x2, y2)
             if edge.is_directed:
-                if has_clone:
-                    pass
-                else:
-                    self._draw_straight_direct(painter, x1, y1, x2, y2)
+                self._draw_straight_direct(painter, x1, y1, x2, y2)
             if edge.weight:
                 self._draw_weight(painter, x1, y1, x2, y2, str(edge.weight))
             if edge.max_flow:

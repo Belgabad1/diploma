@@ -17,6 +17,7 @@ class Vertex(Colorable):
         self._depth = None
         self._prev = None
         self._height = None
+        self._min_width = 0
 
     def set_border_color(self, color):
         self.color = get_color(color)
@@ -94,6 +95,12 @@ class Graph():
                         self.ribs.append(Edge(self.vertices[i], self.vertices[j], directed, max_flow, weight))
         if not coordinates:
             self.fetch_coordinates()
+
+    def get_width(self, default=1200):
+        return getattr(self, '_width', default)
+
+    def get_height(self, default=900):
+        return getattr(self, '_height', default)
 
     def find_vertex(self, index):
         for vertex in self.vertices:
@@ -270,22 +277,41 @@ class Forest(Graph):
         for root in roots:
             dfs(root)
 
-    def _fetch_coordinates(self, width=1200, height=900, indent=45):
-        l, r = 0, 0
-        depth = 0
-        n = len(self.vertices)
-        max_depth = self.vertices[-1]._depth
-        delta = (height - 3 * indent) // max_depth
-        while l < n and r < n:
-            while r < n and self.vertices[r]._depth == depth:
-                r += 1
-            count = r - l
-            num = 1
-            while l < r:
-                self.vertices[l].coordinates = [width * num / (count + 1), indent + depth * delta]
-                l += 1
-                num += 1
-            depth += 1
+    def _fetch_depth(self, roots):
+        visited = [False for _ in range(len(self.vertices))]
+
+        def dfs(v, depth):
+            visited[v] = True
+            self.vertices[v]._depth = depth
+            for edge in self.ribs:
+                u = self._get_second_vertex(edge, v)
+                if u is not None and not visited[u]:
+                    dfs(u, depth + 1)
+
+        for root in roots:
+            dfs(root, 1)
+
+    def _fetch_coordinates(self, roots, width=1200, height=900, indent=45):
+        self._width = width + indent
+        self._height = height
+        visited = [False for _ in range(len(self.vertices))]
+        max_depth = max([vertex._depth for vertex in self.vertices])
+        delta = (height - 3 * indent) // (max_depth-1)
+
+        def dfs(v, border, depth):
+            visited[v] = True
+            self.vertices[v].coordinates = [(2 * border + self.vertices[v]._min_width) // 2, indent + depth * delta]
+            index = self.vertices[v].index
+            for edge in self.ribs:
+                u = self._get_second_vertex(edge, index)
+                if u is not None and not visited[u]:
+                    dfs(u, border, depth + 1)
+                    border += self.vertices[u]._min_width
+
+        border = 0
+        for i in range(len(roots)):
+            dfs(roots[i], border, 0)
+            border += self.vertices[roots[i]]._min_width
 
     def _sort_vertices_by_heights(self, vertices):
         sorted_vertices = sorted(vertices, key=lambda index: -self.vertices[index]._height)
@@ -298,35 +324,32 @@ class Forest(Graph):
             even_vertices.extend(reversed(odd_vertices))
         return even_vertices
 
-    def fetch_coordinates(self):
-        roots = self._find_roots()
-        self._fetch_height(roots)
-        vertices = []
+    def get_min_width(self, roots):
         visited = [False for _ in range(len(self.vertices))]
 
-        queue = Queue()
-        roots = self._sort_vertices_by_heights(roots)
-        for root in roots:
-            self.vertices[root]._depth = 0
-            visited[root] = True
-            vertices.append(self.vertices[root])
-            queue.put(root)
-        while not queue.empty():
-            v = queue.get()
-            sorted_vertices = []
+        def dfs(v, min_width=100):
+            visited[v] = True
+            self.vertices[v]._min_width = 0
             for edge in self.ribs:
                 u = self._get_second_vertex(edge, v)
                 if u is not None and not visited[u]:
-                    self.vertices[u]._depth = self.vertices[v]._depth + 1
-                    visited[u] = True
-                    sorted_vertices.append(u)
-            sorted_vertices = self._sort_vertices_by_heights(sorted_vertices)
-            for vertex in sorted_vertices:
-                queue.put(vertex)
-                vertices.append(self.vertices[vertex])
+                    dfs(u)
+                    self.vertices[v]._min_width += self.vertices[u]._min_width
+            if self.vertices[v]._min_width == 0:
+                self.vertices[v]._min_width = min_width
 
-        self.vertices = vertices
-        self._fetch_coordinates()
+        min_width = 0
+        for i in roots:
+            dfs(i)
+            min_width += self.vertices[i]._min_width
+        return min_width
+
+    def fetch_coordinates(self):
+        roots = self._find_roots()
+        self._fetch_height(roots)
+        self._fetch_depth(roots)
+        min_width = self.get_min_width(roots)
+        self._fetch_coordinates(roots, width=min_width)
 
 
 class Planar(Graph):

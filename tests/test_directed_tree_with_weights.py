@@ -7,8 +7,6 @@ def init_graph():
     def add_ribs(x, y, weight=1, doubled=False):
 
         ribs[x - 1][y - 1] = weight
-        if doubled:
-            ribs[y - 1][x - 1] = weight
 
     add_ribs(1, 10, 5, True)
     add_ribs(2, 4, 15)

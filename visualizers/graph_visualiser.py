@@ -52,5 +52,11 @@ class GraphVisualiser(Visualizer):
     def set_flows(self, flows):
         self.model.set_flows(flows)
 
+    def get_width(self):
+        return self.model.get_width()
+
+    def get_height(self):
+        return self.model.get_height()
+
     def show(self):
         app.exec_()
