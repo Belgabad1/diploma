@@ -1,7 +1,36 @@
-from queue import Queue
+from networkx.utils import random_state
+import numpy as np
 
 from common.common import Colorable
 from common.colors import get_color
+
+
+@random_state(7)
+def _fruchterman_reingold(A, k=None, pos=None, fixed=None, iterations=50,
+                          threshold=1e-4, dim=2, seed=None):
+    nnodes, _ = A.shape
+    pos = np.asarray(seed.rand(nnodes, dim), dtype=A.dtype)
+
+    k = np.sqrt(1.0 / nnodes)
+    t = max(max(pos.T[0]) - min(pos.T[0]), max(pos.T[1]) - min(pos.T[1])) * 0.1
+    dt = t / float(iterations + 1)
+    delta = np.zeros((pos.shape[0], pos.shape[0], pos.shape[1]), dtype=A.dtype)
+    for iteration in range(iterations):
+        delta = pos[:, np.newaxis, :] - pos[np.newaxis, :, :]
+        distance = np.linalg.norm(delta, axis=-1)
+        np.clip(distance, 0.01, None, out=distance)
+        displacement = np.einsum('ijk,ij->ik',
+                                 delta,
+                                 (k * k / distance ** 2 - A * distance / k))
+        length = np.linalg.norm(displacement, axis=-1)
+        length = np.where(length < 0.01, 0.1, length)
+        delta_pos = np.einsum('ij,i->ij', displacement, t / length)
+        pos += delta_pos
+        t -= dt
+        err = np.linalg.norm(delta_pos) / nnodes
+        if err < threshold:
+            break
+    return pos
 
 
 class Vertex(Colorable):
@@ -185,7 +214,27 @@ class Graph():
         self.max_index += 1
 
     def fetch_coordinates(self):
-        pass
+        self._width = 1350
+        self._height = 1050
+        A = [[0.0 for _ in range(len(self.vertices))] for _ in range(len(self.vertices))]
+        for edge in self.ribs:
+            A[edge.first_vertex.index][edge.second_vertex.index] = 2.0
+        pos = _fruchterman_reingold(np.asarray(A))
+        minx = 100
+        miny = 100
+        for ver in pos:
+            minx = min(minx, ver[0])
+            miny = min(miny, ver[1])
+        for ver in pos:
+            ver[0] -= minx
+            ver[1] -= miny
+        maxx = 0
+        maxy = 0
+        for ver in pos:
+            maxx = max(maxx, ver[0])
+            maxy = max(maxy, ver[1])
+        for i in range(pos.shape[0]):
+            self.vertices[i].coordinates = [pos[i][0] * 1200 / maxx + 50, pos[i][1] * 900 / maxy + 50]
 
 
 class Forest(Graph):
@@ -204,9 +253,10 @@ class Forest(Graph):
                 elif not visited[i] and (ribs[v][i] is not None or ribs[i][v] is not None):
                     is_forest &= dfs(i, v)
             return is_forest
+
         result = True
         for i in range(len(ribs)):
-            if not visited:
+            if not visited[i]:
                 result = result & dfs(i)
         return result
 
