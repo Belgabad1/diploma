@@ -1,15 +1,20 @@
-from networkx.utils import random_state
 import numpy as np
 
 from common.common import Colorable
 from common.colors import get_color
+from math import pi, cos, sin
 
 
-@random_state(7)
-def _fruchterman_reingold(A, k=None, pos=None, fixed=None, iterations=50,
-                          threshold=1e-4, dim=2, seed=None):
+def _get_coordinates(nnodes, width=1200, height=900, radius=400):
+    pos = []
+    for angle in np.arange(0.0, 2 * pi, 2 * pi / nnodes):
+        pos.append([1 / 2 + radius * cos(angle) / width, 1 / 2 + radius * sin(angle) / height])
+    return np.asarray(pos)
+
+
+def _fruchterman_reingold(A, iterations=50, threshold=1e-5):
     nnodes, _ = A.shape
-    pos = np.asarray(seed.rand(nnodes, dim), dtype=A.dtype)
+    pos = _get_coordinates(nnodes)
 
     k = np.sqrt(1.0 / nnodes)
     t = max(max(pos.T[0]) - min(pos.T[0]), max(pos.T[1]) - min(pos.T[1])) * 0.1
@@ -99,8 +104,8 @@ class Graph():
             assert isinstance(i, correct_types)
             assert len(i) == n
 
-    def __init__(self, ribs=None, weighted=None, vertices=None, directed=False, has_flow=False, flows=None, coordinates=None):
-        self.__validate(ribs, vertices, flows, coordinates)
+    def __init__(self, ribs=None, weighted=None, labels=None, directed=False, has_flow=False, flows=None, coordinates=None):
+        self.__validate(ribs, labels, flows, coordinates)
         self.vertices = []
         self.ribs = []
         self.directed = directed
@@ -108,7 +113,7 @@ class Graph():
         self.flow = has_flow
 
         for i in range(len(ribs)):
-            label = vertices[i] if vertices else i
+            label = labels[i] if labels else i
             current_coordinates = coordinates[i] if coordinates else None
             self.vertices.append(Vertex(label, i, current_coordinates))
 
@@ -218,7 +223,7 @@ class Graph():
         self._height = 1050
         A = [[0.0 for _ in range(len(self.vertices))] for _ in range(len(self.vertices))]
         for edge in self.ribs:
-            A[edge.first_vertex.index][edge.second_vertex.index] = 2.0
+            A[edge.first_vertex.index][edge.second_vertex.index] = 1.0
         pos = _fruchterman_reingold(np.asarray(A))
         minx = 100
         miny = 100
@@ -346,7 +351,7 @@ class Forest(Graph):
         self._height = height
         visited = [False for _ in range(len(self.vertices))]
         max_depth = max([vertex._depth for vertex in self.vertices])
-        delta = (height - 3 * indent) // (max_depth-1)
+        delta = (height - 3 * indent) // (max(max_depth - 1, 1))
 
         def dfs(v, border, depth):
             visited[v] = True

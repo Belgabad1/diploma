@@ -149,7 +149,7 @@ class GraphWidget(QWidget):
 
     @property
     def RADIUS(self):
-        radius = min(self.width, self.height) // 25
+        radius = min(self.width, self.height) // 30
         return max(min(self.MAX_RADIUS, radius), self.MIN_RADIUS)
 
     @property
@@ -179,11 +179,11 @@ class GraphWidget(QWidget):
         x_fin, y_fin = get_circle_point(x1, y1, x2, y2, self.RADIUS + line_length)
         l = offset * tan(angle)
         ang = get_angle(x1, y1, x2, y2)
-        new_x = x_fin + l * sin(pi - ang)
-        new_y = y_fin + l * cos(pi - ang)
+        new_x = x_fin + l * cos(pi / 2 + ang)
+        new_y = y_fin + l * sin(pi / 2 + ang)
         painter.drawLine(x_beg, y_beg, new_x, new_y)
-        new_x = x_fin - l * sin(pi - ang)
-        new_y = y_fin - l * cos(pi - ang)
+        new_x = x_fin - l * cos(pi / 2 + ang)
+        new_y = y_fin - l * sin(pi / 2 + ang)
         painter.drawLine(x_beg, y_beg, new_x, new_y)
 
     def _draw_arc_direct(self, painter, x1, y1, x2, y2, top, line_length=12, offset=15, angle=pi/6):

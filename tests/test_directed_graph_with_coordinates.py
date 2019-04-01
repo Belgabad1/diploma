@@ -25,6 +25,12 @@ def init_graph():
         [100, 200], [100, 600], [400, 200], [400, 600], [700, 600], [1000, 200], [1000, 600]
     ], has_description=True, directed=True, weighted=True, has_flow=True, flows=flows)
     visualiser.set_description('Ориентированный граф с заданными координатами')
+    visualiser.set_flows({
+        (2, 7): 4,
+        (5, 6): 1,
+        (0, 1): 4,
+        (3, 1): 4,
+    })
     visualiser.next_step()
     visualiser.add_vertex([700, 400])
     visualiser.add_edge(2, 7, max_flow=4)
