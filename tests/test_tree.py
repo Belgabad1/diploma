@@ -24,7 +24,8 @@ def init_graph():
     add_ribs(10, 11)
     add_ribs(11, 12)
 
-    visualiser = GraphVisualiser(ribs=ribs, has_description=True)
+    visualiser = GraphVisualiser(ribs=ribs)
+    visualiser.next_step()
     visualiser.set_vertex_border_color(5, 'red')
     visualiser.set_description('Стартовая вершина имеет номер 5')
     visualiser.next_step()
@@ -57,4 +58,3 @@ def init_graph():
 
 if __name__ == '__main__':
     init_graph()
-

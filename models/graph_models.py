@@ -218,6 +218,14 @@ class Graph():
         self.vertices.append(Vertex(label, self.max_index, coordinates))
         self.max_index += 1
 
+    def get_second_directed_vertex(self, edge, v):
+        if edge.first_vertex.index == v:
+            return edge.second_vertex.index
+        elif edge.second_vertex.index == v and not self.directed:
+            return edge.first_vertex.index
+        else:
+            return None
+
     def fetch_coordinates(self):
         self._width = 1350
         self._height = 1050

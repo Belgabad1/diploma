@@ -1,6 +1,6 @@
 from visualizers.graph_visualiser import GraphVisualiser
 
-K = 10
+K = 4
 
 def init_graph():
     ribs = list(list(None for i in range(K)) for _ in range(K))

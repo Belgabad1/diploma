@@ -43,7 +43,9 @@ class Visualizer(object):
         self.description = Description() if has_description else None
 
     def set_description(self, text):
-        self.description.set_text(text)
+        if self.description:
+            self.description.set_text(text)
 
     def set_variable(self, key, value):
-        self.variables.set_variable(key, value)
+        if self.variables:
+            self.variables.set_variable(key, value)

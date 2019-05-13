@@ -3,6 +3,7 @@ from PyQt5.QtWidgets import QApplication
 from models.graph_models import get_model as graph_get_model
 from user_interface.ui import Widget
 from visualizers.models import Visualizer
+from algorithms.graph_algorithms import ALGORITHMS
 
 app = QApplication([])
 user_interface = Widget()
@@ -57,6 +58,10 @@ class GraphVisualiser(Visualizer):
 
     def get_height(self):
         return self.model.get_height()
+
+    def visualize(self, algorithm, *args, **kwargs):
+        if ALGORITHMS.get(algorithm):
+            ALGORITHMS[algorithm](self, *args, **kwargs)
 
     def show(self):
         app.exec_()

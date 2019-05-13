@@ -16,6 +16,7 @@ TURQUOISE = '#318495'
 ORANGE = '#ff8000'
 YELLOW = '#ffff00'
 BLACK = '#000000'
+DEFAULT = BLACK
 
 COLORS = {
     'blue_light': BLUE_LIGHT,

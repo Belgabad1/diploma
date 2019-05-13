@@ -22,7 +22,6 @@ def init_graph():
     add_ribs(5, 9)
     add_ribs(6, 9)
     add_ribs(6, 10)
-    add_ribs(6, 11)
     add_ribs(7, 8)
     add_ribs(7, 11)
     add_ribs(8, 15)
@@ -38,8 +37,7 @@ def init_graph():
     add_ribs(14, 15)
 
     visualiser = GraphVisualiser(ribs=ribs)
-    visualiser.next_step()
-    visualiser.show()
+    visualiser.visualize('bfs', 6)
 
 if __name__ == '__main__':
     init_graph()
