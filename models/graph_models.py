@@ -48,10 +48,7 @@ class Vertex(Colorable):
         self.color = get_color()
         self.coordinates = coordinates
 
-        self._depth = None
-        self._prev = None
-        self._height = None
-        self._min_width = 0
+        self.data = {}
 
     def set_border_color(self, color):
         self.color = get_color(color)
@@ -61,6 +58,9 @@ class Vertex(Colorable):
 
     def set_coordinates(self, coordinates):
         self.coordinates = coordinates
+
+    def set_label(self, label):
+        self.label = label
 
 
 class Edge(Colorable):
@@ -166,6 +166,10 @@ class Graph():
 
     def find_ribs(self, vertex):
         return [edge for edge in self.ribs if edge.first_vertex == vertex or edge.second_vertex == vertex]
+
+    def set_vertex_label(self, index, label):
+        vertex = self.find_vertex(index)
+        vertex.set_label(label)
 
     def delete_vertex(self, index):
         vertex = self.find_vertex(index)
@@ -330,12 +334,12 @@ class Forest(Graph):
 
         def dfs(v):
             visited[v] = True
-            self.vertices[v]._height = 1
+            self.vertices[v].data['height'] = 1
             for edge in self.ribs:
                 u = self._get_second_vertex(edge, v)
                 if u is not None and not visited[u]:
                     dfs(u)
-                    self.vertices[v]._height = max(self.vertices[v]._height, self.vertices[u]._height + 1)
+                    self.vertices[v].data['height'] = max(self.vertices[v].data['height'], self.vertices[u].data['height'] + 1)
 
         for root in roots:
             dfs(root)
@@ -345,7 +349,7 @@ class Forest(Graph):
 
         def dfs(v, depth):
             visited[v] = True
-            self.vertices[v]._depth = depth
+            self.vertices[v].data['depth'] = depth
             for edge in self.ribs:
                 u = self._get_second_vertex(edge, v)
                 if u is not None and not visited[u]:
@@ -358,26 +362,26 @@ class Forest(Graph):
         self._width = width + indent
         self._height = height
         visited = [False for _ in range(len(self.vertices))]
-        max_depth = max([vertex._depth for vertex in self.vertices])
+        max_depth = max([vertex.data.get('depth') for vertex in self.vertices])
         delta = (height - 3 * indent) // (max(max_depth - 1, 1))
 
         def dfs(v, border, depth):
             visited[v] = True
-            self.vertices[v].coordinates = [(2 * border + self.vertices[v]._min_width) // 2, indent + depth * delta]
+            self.vertices[v].coordinates = [(2 * border + self.vertices[v].data.get('min_width', 0)) // 2, indent + depth * delta]
             index = self.vertices[v].index
             for edge in self.ribs:
                 u = self._get_second_vertex(edge, index)
                 if u is not None and not visited[u]:
                     dfs(u, border, depth + 1)
-                    border += self.vertices[u]._min_width
+                    border += self.vertices[u].data.get('min_width', 0)
 
         border = 0
         for i in range(len(roots)):
             dfs(roots[i], border, 0)
-            border += self.vertices[roots[i]]._min_width
+            border += self.vertices[roots[i]].data.get('min_width', 0)
 
     def _sort_vertices_by_heights(self, vertices):
-        sorted_vertices = sorted(vertices, key=lambda index: -self.vertices[index]._height)
+        sorted_vertices = sorted(vertices, key=lambda index: -self.vertices[index].data['height'])
         even_vertices, odd_vertices, result = [], [], []
         for i in range(0, len(vertices), 2):
             even_vertices.append(sorted_vertices[i])
@@ -392,19 +396,19 @@ class Forest(Graph):
 
         def dfs(v, min_width=100):
             visited[v] = True
-            self.vertices[v]._min_width = 0
+            self.vertices[v].data['min_width'] = 0
             for edge in self.ribs:
                 u = self._get_second_vertex(edge, v)
                 if u is not None and not visited[u]:
                     dfs(u)
-                    self.vertices[v]._min_width += self.vertices[u]._min_width
-            if self.vertices[v]._min_width == 0:
-                self.vertices[v]._min_width = min_width
+                    self.vertices[v].data['min_width'] += self.vertices[u].data.get('min_width', 0)
+            if self.vertices[v].data.get('min_width') == 0:
+                self.vertices[v].data['min_width'] = min_width
 
         min_width = 0
         for i in roots:
             dfs(i)
-            min_width += self.vertices[i]._min_width
+            min_width += self.vertices[i].data.get('min_width', 0)
         return min_width
 
     def fetch_coordinates(self):

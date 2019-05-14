@@ -101,7 +101,7 @@ class VariablesWidget(QWidget):
 
 
 class DescriptionWidget(QWidget):
-    MIN_FONT_SIZE = 12
+    MIN_FONT_SIZE = 10
     MAX_FONT_SIZE = 18
 
     def __init__(self, description, width, height):
@@ -135,7 +135,7 @@ class DescriptionWidget(QWidget):
 
 
 class GraphWidget(QWidget):
-    MIN_RADIUS = 15
+    MIN_RADIUS = 20
     MAX_RADIUS = 25
     MIN_DEPTH = 3
     MAX_DEPTH = 4

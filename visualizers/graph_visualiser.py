@@ -26,6 +26,9 @@ class GraphVisualiser(Visualizer):
     def set_vertex_area_color(self, index, color):
         self.model.set_vertex_area_color(index, color)
 
+    def set_vertex_label(self, index, label):
+        self.model.set_vertex_label(index, label)
+
     def set_edge_color(self, vertex_in, vertex_out, color):
         self.model.set_edge_color(vertex_in, vertex_out, color)
 
