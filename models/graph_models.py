@@ -1,7 +1,10 @@
+import random
+
 import numpy as np
 
 from common.common import Colorable
 from common.colors import get_color
+from common.util import get_crossing_number, min_length
 from math import pi, cos, sin
 
 
@@ -12,9 +15,53 @@ def _get_coordinates(nnodes, width=1200, height=900, radius=400):
     return np.asarray(pos)
 
 
-def _fruchterman_reingold(A, iterations=50, threshold=1e-5):
+def get_result(pos, A):
+    minx = 100
+    miny = 100
+    for ver in pos:
+        minx = min(minx, ver[0])
+        miny = min(miny, ver[1])
+    for ver in pos:
+        ver[0] -= minx
+        ver[1] -= miny
+    maxx = 0
+    maxy = 0
+    for ver in pos:
+        maxx = max(maxx, ver[0])
+        maxy = max(maxy, ver[1])
+    result = []
+    for i in range(pos.shape[0]):
+        result.append([pos[i][0] * 1200 / maxx + 50, pos[i][1] * 900 / maxy + 50])
+    lines = []
+    for i in range(A.shape[0]):
+        for j in range(A.shape[1]):
+            if A[i][j] == 1.0:
+                lines.append([result[i][0], result[i][1], result[j][0], result[j][1]])
+    return result, lines
+
+
+def _get_optimal_coordinates(A):
     nnodes, _ = A.shape
-    pos = _get_coordinates(nnodes)
+    pos = _fruchterman_reingold(np.asarray(A), _get_coordinates(nnodes))
+    result, lines = get_result(pos, A)
+    optimal = get_crossing_number(lines)
+    min_len = min_length(result)
+    answer = result
+    for _ in range(100):
+        coordinates = [[random.random(), random.random()] for _ in range(nnodes)]
+        pos = _fruchterman_reingold(np.asarray(A), np.asarray(coordinates))
+        result, lines = get_result(pos, A)
+        len = min_length(result)
+        if len < 50:
+            continue
+        crossing_number = get_crossing_number(lines)
+        if crossing_number < optimal or (crossing_number == optimal and len > min_len):
+            optimal, answer, min_len = crossing_number, result, len
+    return np.asarray(answer)
+
+
+def _fruchterman_reingold(A, pos, iterations=50, threshold=1e-5):
+    nnodes, _ = A.shape
 
     k = np.sqrt(1.0 / nnodes)
     t = max(max(pos.T[0]) - min(pos.T[0]), max(pos.T[1]) - min(pos.T[1])) * 0.1
@@ -236,22 +283,9 @@ class Graph():
         A = [[0.0 for _ in range(len(self.vertices))] for _ in range(len(self.vertices))]
         for edge in self.ribs:
             A[edge.first_vertex.index][edge.second_vertex.index] = 1.0
-        pos = _fruchterman_reingold(np.asarray(A))
-        minx = 100
-        miny = 100
-        for ver in pos:
-            minx = min(minx, ver[0])
-            miny = min(miny, ver[1])
-        for ver in pos:
-            ver[0] -= minx
-            ver[1] -= miny
-        maxx = 0
-        maxy = 0
-        for ver in pos:
-            maxx = max(maxx, ver[0])
-            maxy = max(maxy, ver[1])
+        pos = _get_optimal_coordinates(np.asarray(A))
         for i in range(pos.shape[0]):
-            self.vertices[i].coordinates = [pos[i][0] * 1200 / maxx + 50, pos[i][1] * 900 / maxy + 50]
+            self.vertices[i].coordinates = pos[i]
 
 
 class Forest(Graph):

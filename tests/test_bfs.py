@@ -24,7 +24,7 @@ def init_graph():
     add_ribs(10, 11)
     add_ribs(11, 12)
 
-    visualiser = GraphVisualiser(ribs=ribs)
+    visualiser = GraphVisualiser(ribs=ribs, has_description=True)
     visualiser.visualize('bfs', 5)
 
 

@@ -33,7 +33,7 @@ def init_graph():
     add_ribs(23, 25)
     add_ribs(25, 26)
 
-    visualiser = GraphVisualiser(ribs=ribs)
+    visualiser = GraphVisualiser(ribs=ribs, has_description=True)
     visualiser.visualize('components')
 
 

@@ -122,3 +122,36 @@ def get_arc_point(x1, y1, x2, y2, top, radius):
         if dist < best_dist:
             best_x, best_y, best_dist = circle_x, y2 + i, dist
     return best_x, best_y
+
+
+def is_crossing(line1, line2):
+    A1, B1, C1 = get_straight_coeff(line1[0], line1[1], line1[2], line1[3])
+    A2, B2, C2 = get_straight_coeff(line2[0], line2[1], line2[2], line2[3])
+    y = (C2 * A1 - C1 * A2) / (A2 * B1 - A1 * B2)
+    return (
+        min(line1[1], line1[3]) + 0.01 < y < max(line1[1], line1[3]) - 0.01 and
+        min(line2[1], line2[3]) + 0.01 < y < max(line2[1], line2[3]) - 0.01
+    )
+
+
+def get_crossing_number(lines):
+    n = len(lines)
+    crossing_number = 0
+    for i in range(n):
+        for j in range(n):
+            if i != j:
+                crossing_number += is_crossing(lines[i], lines[j])
+    return crossing_number
+
+
+def min_length(result):
+    ans = None
+    for i in range(len(result)):
+        for j in range(len(result)):
+            if i != j:
+                dist = get_distance(result[i][0], result[i][1], result[j][0], result[j][1])
+                if not ans:
+                    ans = dist
+                else:
+                    ans = min(ans, dist)
+    return ans
