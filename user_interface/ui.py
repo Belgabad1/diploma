@@ -6,7 +6,7 @@ from PyQt5.QtGui import QPainter, QPen, QColor, QFont
 from PyQt5.QtWidgets import QMainWindow, QStackedWidget, QWidget, QGridLayout
 
 from common.util import (
-    get_circle_point, get_angle, get_rect_point, get_arc_point, get_rect_width_height, rotate_point_by_angle
+    get_circle_point, get_angle, rotate_point_by_angle
 )
 from user_interface.util import Functions
 
