@@ -52,7 +52,7 @@ def _get_optimal_coordinates(A):
         pos = _fruchterman_reingold(np.asarray(A), np.asarray(coordinates))
         result, lines = get_result(pos, A)
         len = min_length(result)
-        if len < 50:
+        if len < 60:
             continue
         crossing_number = get_crossing_number(lines)
         if crossing_number < optimal or (crossing_number == optimal and len > min_len):

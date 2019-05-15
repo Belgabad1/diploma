@@ -5,7 +5,9 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QPainter, QPen, QColor, QFont
 from PyQt5.QtWidgets import QMainWindow, QStackedWidget, QWidget, QGridLayout
 
-from common.util import get_circle_point, get_angle, get_rect_point, get_arc_point, get_rect_width_height
+from common.util import (
+    get_circle_point, get_angle, get_rect_point, get_arc_point, get_rect_width_height, rotate_point_by_angle
+)
 from user_interface.util import Functions
 
 
@@ -174,66 +176,67 @@ class GraphWidget(QWidget):
     def resize(self, x, y):
         return x * self.width / self.visualiser.get_width(), y * self.height / self.visualiser.get_height()
 
-    def _draw_straight_direct(self, painter, x1, y1, x2, y2, line_length=12, offset=15, angle=pi/6):
-        x_beg, y_beg = get_circle_point(x1, y1, x2, y2, self.RADIUS)
-        x_fin, y_fin = get_circle_point(x1, y1, x2, y2, self.RADIUS + line_length)
+    def _draw_direct(self, painter, x1, y1, x2, y2, line_length=10, offset=10, angle=pi/6):
+        x_fin, y_fin = get_circle_point(x1, y1, x2, y2, line_length)
         l = offset * tan(angle)
         ang = get_angle(x1, y1, x2, y2)
         new_x = x_fin + l * cos(pi / 2 + ang)
         new_y = y_fin + l * sin(pi / 2 + ang)
-        painter.drawLine(x_beg, y_beg, new_x, new_y)
+        painter.drawLine(x2, y2, new_x, new_y)
         new_x = x_fin - l * cos(pi / 2 + ang)
         new_y = y_fin - l * sin(pi / 2 + ang)
-        painter.drawLine(x_beg, y_beg, new_x, new_y)
-
-    def _draw_arc_direct(self, painter, x1, y1, x2, y2, top, line_length=12, offset=15, angle=pi/6):
-        x_beg, y_beg = get_arc_point(x1, y1, x2, y2, top, self.RADIUS)
-        x_fin, y_fin = get_circle_point(x_beg, y_beg, x2, y2, self.RADIUS + line_length)
-        l = offset * tan(angle)
-        ang = get_angle(x_beg, y_beg, x2, y2)
-        new_x = x_fin + l * sin(pi - ang)
-        new_y = y_fin + l * cos(pi - ang)
-        painter.drawLine(x_beg, y_beg, new_x, new_y)
-        new_x = x_fin - l * sin(pi - ang)
-        new_y = y_fin - l * cos(pi - ang)
-        painter.drawLine(x_beg, y_beg, new_x, new_y)
-
-    def _draw_weight(self, painter, x1, y1, x2, y2, text):
-        x_fin, y_fin = (x1 + x2) / 2, (y1 + y2) / 2
-        l = 15
-        ang = get_angle(x1, y1, x2, y2)
-        new_x = x_fin - l * sin(pi - ang)
-        new_y = y_fin - l * cos(pi - ang)
-        painter.setPen(QPen(Qt.black, self.DEPTH))
-        painter.drawText(new_x - 15, new_y - 15, 30, 30, Qt.AlignCenter, text)
+        painter.drawLine(x2, y2, new_x, new_y)
 
     def _get_flow_text(self, edge):
         return '{}/{}'.format(edge.current_flow, edge.max_flow)
 
-    def _draw_flow(self, painter, x1, y1, x2, y2, text):
+    def _draw_text(self, painter, x1, y1, x2, y2, text):
         x_fin, y_fin = (x1 + x2) / 2, (y1 + y2) / 2
-        l = 16
+        l = 14
         ang = get_angle(x1, y1, x2, y2)
-        new_x = x_fin + l * sin(pi - ang)
-        new_y = y_fin + l * cos(pi - ang)
+        new_x = x_fin - l * sin(pi - ang)
+        new_y = y_fin - l * cos(pi - ang)
         painter.setPen(QPen(Qt.black, self.DEPTH))
+        painter.setFont(QFont('default', 8))
         painter.drawText(new_x - 20, new_y - 20, 40, 40, Qt.AlignCenter, text)
+
+    def _get_edge_coordinates(self, edge, doubled=False, angle=pi/12):
+        if not doubled:
+            x1, y1 = edge.first_vertex.coordinates
+            x2, y2 = edge.second_vertex.coordinates
+            x1, y1 = self.resize(x1, y1)
+            x2, y2 = self.resize(x2, y2)
+            res_x1, res_y1 = get_circle_point(x2, y2, x1, y1, self.RADIUS)
+            res_x2, res_y2 = get_circle_point(x1, y1, x2, y2, self.RADIUS)
+            return res_x1, res_y1, res_x2, res_y2
+        else:
+            x1, y1 = edge.first_vertex.coordinates
+            x2, y2 = edge.second_vertex.coordinates
+            x1, y1 = self.resize(x1, y1)
+            x2, y2 = self.resize(x2, y2)
+            res_x1, res_y1 = get_circle_point(x2, y2, x1, y1, self.RADIUS)
+            res_x1, res_y1 = rotate_point_by_angle(x1, y1, res_x1, res_y1, self.RADIUS, angle)
+            res_x2, res_y2 = get_circle_point(x1, y1, x2, y2, self.RADIUS)
+            res_x2, res_y2 = rotate_point_by_angle(x2, y2, res_x2, res_y2, self.RADIUS, -angle)
+            return res_x1, res_y1, res_x2, res_y2
 
     def _draw_edges(self, painter):
         ribs = self.visualiser.model.ribs
         for edge in ribs:
-            x1, y1 = edge.first_vertex.coordinates
-            x1, y1 = self.resize(x1, y1)
-            x2, y2 = edge.second_vertex.coordinates
-            x2, y2 = self.resize(x2, y2)
+            doubled = edge.is_directed and self.visualiser.model.find_rib(edge.second_vertex.index, edge.first_vertex.index)
+            x1, y1, x2, y2 = self._get_edge_coordinates(edge, doubled)
             painter.setPen(QPen(QColor(edge.color), self.DEPTH))
             painter.drawLine(x1, y1, x2, y2)
+            text = ''
             if edge.is_directed:
-                self._draw_straight_direct(painter, x1, y1, x2, y2)
+                self._draw_direct(painter, x1, y1, x2, y2)
             if edge.weight:
-                self._draw_weight(painter, x1, y1, x2, y2, str(edge.weight))
+                text = str(edge.weight)
             if edge.max_flow:
-                self._draw_flow(painter, x1, y1, x2, y2, self._get_flow_text(edge))
+                if text:
+                    text += '\n'
+                    text += self._get_flow_text(edge)
+            self._draw_text(painter, x1, y1, x2, y2, text)
 
     def paintEvent(self, event):
         painter = QPainter()

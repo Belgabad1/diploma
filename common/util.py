@@ -1,6 +1,8 @@
 import math
 
 
+ERR = 1e-6
+
 def get_distance(x1, y1, x2, y2):
     return math.sqrt((x1 - x2) ** 2 + (y1 - y2) ** 2)
 
@@ -97,12 +99,22 @@ def get_rect_point(x1, y1, x2, y2, top=False):
 def get_angle(x1, y1, x2, y2):
     A, B, C = get_straight_coeff(x1, y1, x2, y2)
     if B:
-        return math.atan(-A / B)
+        angle = math.atan(-A / B)
+        if A < -ERR:
+            angle += math.pi
+        elif B > ERR:
+            angle += math.pi
+        return angle
     else:
         if (A > 0):
-            return -math.pi / 2
-        else:
             return math.pi / 2
+        else:
+            return 3 * math.pi / 2
+
+
+def rotate_point_by_angle(x, y, x1, y1, r, delta_angle):
+    angle = get_angle(x, y, x1, y1)
+    return x + r * math.cos(angle + delta_angle), y + r * math.sin(angle + delta_angle)
 
 
 def get_arc_point(x1, y1, x2, y2, top, radius):
