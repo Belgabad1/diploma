@@ -37,7 +37,7 @@ def init_graph():
     add_ribs(14, 15)
 
     visualiser = GraphVisualiser(ribs=ribs, weighted=True, has_description=True)
-    visualiser.visualize('kruskal')
+    visualiser.visualize('prim')
 
 
 if __name__ == '__main__':

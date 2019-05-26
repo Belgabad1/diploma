@@ -67,4 +67,5 @@ class GraphVisualiser(Visualizer):
             ALGORITHMS[algorithm](self, *args, **kwargs)
 
     def show(self):
+        user_interface.widget.setCurrentIndex(1)
         app.exec_()

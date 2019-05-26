@@ -190,17 +190,16 @@ class GraphWidget(QWidget):
     def _get_flow_text(self, edge):
         return '{}/{}'.format(edge.current_flow, edge.max_flow)
 
-    def _draw_text(self, painter, x1, y1, x2, y2, text):
+    def _draw_text(self, painter, x1, y1, x2, y2, text, l=14):
         x_fin, y_fin = (x1 + x2) / 2, (y1 + y2) / 2
-        l = 14
         ang = get_angle(x1, y1, x2, y2)
         new_x = x_fin - l * sin(pi - ang)
         new_y = y_fin - l * cos(pi - ang)
         painter.setPen(QPen(Qt.black, self.DEPTH))
         painter.setFont(QFont('default', 8))
-        painter.drawText(new_x - 20, new_y - 20, 40, 40, Qt.AlignCenter, text)
+        painter.drawText(new_x - 30, new_y - 30, 60, 60, Qt.AlignCenter, text)
 
-    def _get_edge_coordinates(self, edge, doubled=False, angle=pi/12):
+    def _get_edge_coordinates(self, edge, doubled=False, angle=pi/10):
         if not doubled:
             x1, y1 = edge.first_vertex.coordinates
             x2, y2 = edge.second_vertex.coordinates
@@ -228,15 +227,17 @@ class GraphWidget(QWidget):
             painter.setPen(QPen(QColor(edge.color), self.DEPTH))
             painter.drawLine(x1, y1, x2, y2)
             text = ''
+            l = 14
             if edge.is_directed:
                 self._draw_direct(painter, x1, y1, x2, y2)
             if edge.weight:
                 text = str(edge.weight)
-            if edge.max_flow:
+            if edge.max_flow is not None:
                 if text:
                     text += '\n'
-                    text += self._get_flow_text(edge)
-            self._draw_text(painter, x1, y1, x2, y2, text)
+                    l = 20
+                text += self._get_flow_text(edge)
+            self._draw_text(painter, x1, y1, x2, y2, text, l=l)
 
     def paintEvent(self, event):
         painter = QPainter()

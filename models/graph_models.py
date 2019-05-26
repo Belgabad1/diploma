@@ -121,6 +121,8 @@ class Edge(Colorable):
         self.max_flow = max_flow
         self.weight = weight
 
+        self.data = {}
+
     def set_current_flow(self, flow):
         if flow > self.max_flow:
             raise ValueError('Incorrect flow')

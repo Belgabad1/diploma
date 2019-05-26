@@ -26,7 +26,7 @@ def init_graph():
     add_ribs(12, 14)
     add_ribs(13, 14)
 
-    visualiser = GraphVisualiser(ribs=ribs)
+    visualiser = GraphVisualiser(ribs=ribs, has_description=True)
     visualiser.visualize('components')
 
 if __name__ == '__main__':

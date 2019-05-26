@@ -33,24 +33,23 @@ def init_graph():
         (0, 1): 4,
         (3, 1): 4,
     })
-    visualiser.set_edge_color(3, 0, color='red')
     visualiser.next_step()
-    # visualiser.add_vertex([700, 400])
-    # visualiser.add_edge(2, 7, max_flow=4)
-    # visualiser.add_edge(7, 5, max_flow=6)
-    # visualiser.set_description('Добавлена вершина 7 и ребра (2, 7), (7, 5)')
-    # visualiser.next_step()
-    # visualiser.delete_vertex(4)
-    # visualiser.set_description('Удалена вершина с номером 4')
-    # visualiser.next_step()
-    # visualiser.set_flows({
-    #     (2, 7): 4,
-    #     (5, 6): 1,
-    #     (0, 1): 4,
-    #     (3, 1): 4,
-    # })
-    # visualiser.set_description('Меняем поток для некоторых ребер')
-    # visualiser.next_step()
+    visualiser.add_vertex([700, 400])
+    visualiser.add_edge(2, 7, max_flow=4)
+    visualiser.add_edge(7, 5, max_flow=6)
+    visualiser.set_description('Добавлена вершина 7 и ребра (2, 7), (7, 5)')
+    visualiser.next_step()
+    visualiser.delete_vertex(4)
+    visualiser.set_description('Удалена вершина с номером 4')
+    visualiser.next_step()
+    visualiser.set_flows({
+        (2, 7): 4,
+        (5, 6): 1,
+        (0, 1): 4,
+        (3, 1): 4,
+    })
+    visualiser.set_description('Меняем поток для некоторых ребер')
+    visualiser.next_step()
     visualiser.show()
 
 if __name__ == '__main__':

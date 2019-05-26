@@ -61,7 +61,7 @@ def get_rect_center(x1, y1, x2, y2, top=False):
 
 def get_angle(x1, y1, x2, y2):
     A, B, C = get_straight_coeff(x1, y1, x2, y2)
-    if B:
+    if math.fabs(B) > ERR:
         angle = math.atan(-A / B)
         if A < -ERR:
             angle += math.pi
@@ -69,7 +69,7 @@ def get_angle(x1, y1, x2, y2):
             angle += math.pi
         return angle
     else:
-        if (A > 0):
+        if (A > ERR):
             return math.pi / 2
         else:
             return 3 * math.pi / 2

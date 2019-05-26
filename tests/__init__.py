@@ -9,15 +9,9 @@ def init_graph():
 
         ribs[x - 1][y - 1] = 1
 
-    visualiser = GraphVisualiser(ribs=ribs, has_description=True,
-                                 coordinates=[[i, 450] for i in range(200, 1100, 100)], labels=[
-            'a', 'aba', 2, 3, 4, 5, 'label', 7, 8
-        ]
+    visualiser = GraphVisualiser(ribs=[[1, 1], [1, 1]], has_description=False, directed=True,
+                                 coordinates=[[200, 200], [500, 400]]
     )
-    color = list(COLORS.keys())
-    for i in range(8):
-        visualiser.set_vertex_area_color(i, color[i])
-        visualiser.set_vertex_border_color(i, color[i + 1])
     visualiser.next_step()
     visualiser.show()
 
